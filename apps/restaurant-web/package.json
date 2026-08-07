@@ -1,5 +1,5 @@
 {
-  "name": "kaon-restaurant-web",
+  "name": "food-dash-restaurant-web",
   "version": "0.1.0",
   "type": "module",
   "scripts": {
@@ -8,8 +8,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@kaon/money": "*",
-    "@kaon/session": "*",
+    "@food-dash/money": "*",
+    "@food-dash/session": "*",
     "@supabase/supabase-js": "^2.45.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

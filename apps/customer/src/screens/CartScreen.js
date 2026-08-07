@@ -4,9 +4,9 @@ import {
 } from 'react-native';
 import {
   CoralHeader, StatusPill, PrimaryButton, Field, ErrorText,
-} from '@kaon/ui';
-import { colors, spacing, typography } from '@kaon/theme';
-import { formatMoney } from '@kaon/money';
+} from '@food-dash/ui';
+import { colors, spacing, typography } from '@food-dash/theme';
+import { formatMoney } from '@food-dash/money';
 import { placeOrder } from '../lib/orders';
 
 export default function CartScreen({ route, navigation }) {

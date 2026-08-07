@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import {
   View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { CoralHeader, PrimaryButton, Field, ErrorText, TextLink } from '@kaon/ui';
-import { colors, spacing } from '@kaon/theme';
+import { CoralHeader, PrimaryButton, Field, ErrorText, TextLink } from '@food-dash/ui';
+import { colors, spacing } from '@food-dash/theme';
 import { supabase } from '../lib/supabase';
 
 // Rider accounts are separate from customer accounts — same person, two
@@ -51,7 +51,7 @@ export default function AuthScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <CoralHeader
-        title={signingUp ? 'Ride with Kaon' : 'Kaon Rider'}
+        title={signingUp ? 'Ride with Food-Dash' : 'Food-Dash Rider'}
         subtitle={
           signingUp
             ? 'We’ll check your documents before you can start'

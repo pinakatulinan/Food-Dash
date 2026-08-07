@@ -30,7 +30,7 @@ export default function Login() {
   return (
     <>
       <header className="header">
-        <h1>Kaon</h1>
+        <h1>Food-Dash</h1>
         <p>Restaurant dashboard</p>
       </header>
       <main className="login">
@@ -58,7 +58,7 @@ export default function Login() {
             {busy ? 'Signing in…' : 'Sign in'}
           </button>
           <p className="hint">
-            No account? Restaurant logins are set up by the Kaon team.
+            No account? Restaurant logins are set up by the Food-Dash team.
           </p>
         </form>
       </main>

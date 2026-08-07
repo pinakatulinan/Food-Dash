@@ -1,4 +1,4 @@
-// Monorepo setup: Metro has to watch the workspace root so the @kaon/*
+// Monorepo setup: Metro has to watch the workspace root so the @food-dash/*
 // packages resolve, and must stop walking up the tree for everything else.
 const { getDefaultConfig } = require('expo/metro-config');
 const path = require('path');

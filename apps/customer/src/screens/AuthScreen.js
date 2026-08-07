@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import {
   View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { CoralHeader, PrimaryButton, Field, ErrorText, TextLink } from '@kaon/ui';
-import { colors, spacing } from '@kaon/theme';
+import { CoralHeader, PrimaryButton, Field, ErrorText, TextLink } from '@food-dash/ui';
+import { colors, spacing } from '@food-dash/theme';
 import { supabase } from '../lib/supabase';
 
 // Email + password with confirmations turned off, so signup logs you straight

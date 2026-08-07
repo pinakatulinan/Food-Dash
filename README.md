@@ -1,4 +1,4 @@
-# Kaon Delivery
+# Food-Dash
 
 Food delivery platform pilot for the Cebu area. Three-sided marketplace: customer app, rider app, restaurant dashboard — all sharing one Supabase backend and one design system (Style C: coral header, mint status, white surfaces).
 
@@ -8,7 +8,7 @@ An npm workspace — one `npm install` at the root installs all three apps and
 links the shared packages.
 
 ```
-kaon-delivery/
+food-dash/
 ├── package.json            # Workspace root (apps/* + packages/*)
 ├── supabase/
 │   ├── schema.sql          # Baseline schema + RLS policies (run first)
@@ -16,8 +16,8 @@ kaon-delivery/
 │   ├── seed.sql            # Sample Cebu restaurants + menus for dev
 │   └── verify.sql          # Post-setup checks — every row should read PASS
 ├── packages/
-│   ├── theme/              # @kaon/theme — design tokens, single source of truth
-│   └── money/              # @kaon/money — centavo helpers + commission split
+│   ├── theme/              # @food-dash/theme — design tokens, single source of truth
+│   └── money/              # @food-dash/money — centavo helpers + commission split
 ├── apps/
 │   ├── customer/           # Expo (React Native) — browse, order, pay, track
 │   ├── rider/              # Expo (React Native) — go online, accept, deliver, earnings
@@ -37,10 +37,10 @@ kaon-delivery/
    project URL and **anon** key from Settings → API. The `service_role` key
    never goes in an app — it bypasses every RLS policy in `schema.sql`.
 3. **Install once, at the repo root** — `npm install`. Never run `npm install`
-   inside an app directory; that breaks the workspace links to `@kaon/*`.
-4. **Customer app** — `npm start -w kaon-customer` (Expo Go on your phone).
-5. **Rider app** — `npm start -w kaon-rider`.
-6. **Restaurant dashboard** — `npm run dev -w kaon-restaurant-web`.
+   inside an app directory; that breaks the workspace links to `@food-dash/*`.
+4. **Customer app** — `npm start -w food-dash-customer` (Expo Go on your phone).
+5. **Rider app** — `npm start -w food-dash-rider`.
+6. **Restaurant dashboard** — `npm run dev -w food-dash-restaurant-web`.
 
 `EXPO_PUBLIC_*` vars are inlined at build time — after editing `.env`, restart
 Metro with `--clear` or you'll keep running the old values.
@@ -57,7 +57,7 @@ marked with a `TODO` comment showing the Supabase query that replaces it.
 4. Status shown on the coral header = white pill with teal text.
 5. Content below headers stays neutral: white, hairline dividers, muted grays.
 
-All values come from `@kaon/theme`. Never hardcode a hex in a screen.
+All values come from `@food-dash/theme`. Never hardcode a hex in a screen.
 
 ## Accounts & registration
 
@@ -95,13 +95,13 @@ Native, and users get silently logged out on every app restart.
 - Every amount — database, app state, props — is an integer number of centavos.
   Floats never touch money. If a value isn't named `*_cents` / `*Cents`, it
   isn't money.
-- Convert at exactly two boundaries, both in `@kaon/money`:
+- Convert at exactly two boundaries, both in `@food-dash/money`:
   `pesos(129)` when authoring a literal, `formatMoney(12900)` when rendering.
   The ₱ symbol and decimal convention live in that one file.
 - Platform takes a cut of **both** the food subtotal (from the restaurant) and
   the delivery fee (from the rider). Both rates are snapshotted per order so
   changing them later never rewrites historical payouts.
-- `splitOrderMoney()` in `@kaon/money` is the single implementation of that
+- `splitOrderMoney()` in `@food-dash/money` is the single implementation of that
   split. It rounds each party's cut and gives the platform the remainder, so
   the three payouts always sum back to exactly the order total.
 
@@ -113,16 +113,16 @@ you. Changing either rate only affects future orders.
 
 ## 8-week build plan
 
-| Week | Dev 1 (backend)            | Dev 2 (customer app)       | Dev 3 (rider + dashboard)  |
-|------|----------------------------|----------------------------|----------------------------|
-| 1    | Supabase setup, auth       | Expo scaffold, navigation  | Rider scaffold             |
-| 2    | Orders API + RLS hardening | Home + restaurant screens  | Incoming orders + accept   |
-| 3    | PayMongo integration       | Cart + checkout            | Active delivery flow       |
-| 4    | Order status functions     | Live tracking (realtime)   | Restaurant dashboard       |
-| 5    | Rider assignment logic     | Auth + addresses           | Rider earnings (real data) |
-| 6    | Push notifications (FCM)   | Polish + error states      | Polish + error states      |
-| 7    | Integration testing        | Integration testing        | Integration testing        |
-| 8    | Pilot launch prep          | Pilot launch prep          | Pilot: 1 barangay, 3-5 restaurants |
+| Week | Dev 1 (backend)            | Dev 2 (customer app)      | Dev 3 (rider + dashboard)          |
+| ---- | -------------------------- | ------------------------- | ---------------------------------- |
+| 1    | Supabase setup, auth       | Expo scaffold, navigation | Rider scaffold                     |
+| 2    | Orders API + RLS hardening | Home + restaurant screens | Incoming orders + accept           |
+| 3    | PayMongo integration       | Cart + checkout           | Active delivery flow               |
+| 4    | Order status functions     | Live tracking (realtime)  | Restaurant dashboard               |
+| 5    | Rider assignment logic     | Auth + addresses          | Rider earnings (real data)         |
+| 6    | Push notifications (FCM)   | Polish + error states     | Polish + error states              |
+| 7    | Integration testing        | Integration testing       | Integration testing                |
+| 8    | Pilot launch prep          | Pilot launch prep         | Pilot: 1 barangay, 3-5 restaurants |
 
 ## Deliberately NOT in the MVP
 

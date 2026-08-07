@@ -1,6 +1,6 @@
 // theme.js — Design tokens for the food delivery app (Style C: bold header)
 // Palette: pastel coral + pastel mint + white
-// Usage: import { colors, spacing, radius, typography } from '@kaon/theme';
+// Usage: import { colors, spacing, radius, typography } from '@food-dash/theme';
 // Rule of thumb: coral = actions & brand, mint = status & reassurance, white = everything else.
 
 export const colors = {

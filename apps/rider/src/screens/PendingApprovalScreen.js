@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { CoralHeader, Card, HeaderStatusPill } from '@kaon/ui';
-import { colors, spacing, typography } from '@kaon/theme';
+import { CoralHeader, Card, HeaderStatusPill } from '@food-dash/ui';
+import { colors, spacing, typography } from '@food-dash/theme';
 
 // Shown when a rider account exists but isn't approved. The database enforces
 // this too — the check constraint on riders makes going online impossible
@@ -13,7 +13,7 @@ export default function PendingApprovalScreen({ status, onSignOut }) {
     <View style={styles.screen}>
       <CoralHeader
         title={suspended ? 'Account suspended' : 'Application received'}
-        subtitle="Kaon Rider"
+        subtitle="Food-Dash Rider"
         action={{ label: 'Sign out', onPress: onSignOut }}
       >
         <HeaderStatusPill label={suspended ? 'Suspended' : 'Pending review'} />
@@ -25,8 +25,8 @@ export default function PendingApprovalScreen({ status, onSignOut }) {
           </Text>
           <Text style={styles.detail}>
             {suspended
-              ? 'Please get in touch with the Kaon team to sort this out.'
-              : 'Bring your driver’s licence, OR/CR and a valid ID to the Kaon team. Once you’re approved this screen becomes your order list.'}
+              ? 'Please get in touch with the Food-Dash team to sort this out.'
+              : 'Bring your driver’s licence, OR/CR and a valid ID to the Food-Dash team. Once you’re approved this screen becomes your order list.'}
           </Text>
         </Card>
       </View>

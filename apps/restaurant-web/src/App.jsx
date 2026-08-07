@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { formatMoney } from '@kaon/money';
+import { formatMoney } from '@food-dash/money';
 import { supabase } from './lib/supabase';
 import { useSession } from './lib/useSession';
 import {
@@ -104,7 +104,7 @@ function Dashboard({ userId }) {
         <main className="login">
           <div className="card">
             <p className="hint">
-              This account isn’t the owner of any restaurant. Ask the Kaon team
+              This account isn’t the owner of any restaurant. Ask the Food-Dash team
               to link it, then reload.
             </p>
             <button className="cta secondary" onClick={() => supabase.auth.signOut()}>

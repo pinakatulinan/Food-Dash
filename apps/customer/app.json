@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "Kaon",
-    "slug": "kaon-customer",
+    "name": "Food-Dash",
+    "slug": "food-dash-customer",
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "splash": { "backgroundColor": "#FFD9C9" },
     "ios": { "supportsTablet": false },
-    "android": { "package": "ph.kaon.customer" }
+    "android": { "package": "ph.fooddash.customer" }
   }
 }

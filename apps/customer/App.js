@@ -7,6 +7,7 @@ import { colors } from '@food-dash/theme';
 import { useSession } from './src/lib/useSession';
 import AuthScreen from './src/screens/AuthScreen';
 import HomeScreen from './src/screens/HomeScreen';
+import OrdersScreen from './src/screens/OrdersScreen';
 import RestaurantScreen from './src/screens/RestaurantScreen';
 import CartScreen from './src/screens/CartScreen';
 import TrackingScreen from './src/screens/TrackingScreen';
@@ -33,6 +34,7 @@ export default function App() {
       {session ? (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="Orders" component={OrdersScreen} />
           <Stack.Screen name="Restaurant" component={RestaurantScreen} />
           <Stack.Screen name="Cart" component={CartScreen} />
           <Stack.Screen name="Tracking" component={TrackingScreen} />

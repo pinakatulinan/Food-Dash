@@ -7,6 +7,7 @@ import { colors, spacing, typography } from '@food-dash/theme';
 import { supabase } from './src/lib/supabase';
 import { useSession } from './src/lib/useSession';
 import { fetchRiderRecord } from './src/lib/rider';
+import { registerForPush, unregisterPush } from './src/lib/push';
 import AuthScreen from './src/screens/AuthScreen';
 import PendingApprovalScreen from './src/screens/PendingApprovalScreen';
 import IncomingOrdersScreen from './src/screens/IncomingOrdersScreen';
@@ -14,7 +15,12 @@ import ActiveDeliveryScreen from './src/screens/ActiveDeliveryScreen';
 import EarningsScreen from './src/screens/EarningsScreen';
 
 const Stack = createNativeStackNavigator();
-const signOut = () => supabase.auth.signOut();
+
+const signOut = async () => {
+  // Drop the token first — after sign-out RLS no longer lets us delete it.
+  await unregisterPush();
+  await supabase.auth.signOut();
+};
 
 export default function App() {
   const { session, loading } = useSession();
@@ -38,6 +44,15 @@ export default function App() {
   }, [userId]);
 
   useEffect(() => { setRiderLoading(true); refreshRider(); }, [refreshRider]);
+
+  // Only approved riders get orders, so only they need a token. Failure here
+  // is deliberately silent: no notifications is worse than no app.
+  useEffect(() => {
+    if (!userId || rider?.status !== 'approved') return;
+    registerForPush(userId).catch((e) =>
+      console.warn('Push registration failed:', e.message),
+    );
+  }, [userId, rider?.status]);
 
   if (loading || (session && riderLoading)) {
     return (

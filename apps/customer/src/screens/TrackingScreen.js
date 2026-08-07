@@ -3,27 +3,10 @@ import { View, Text, StyleSheet } from 'react-native';
 import { CoralHeader, HeaderStatusPill, Card } from '@food-dash/ui';
 import { colors, spacing, typography, radius } from '@food-dash/theme';
 import { formatMoney } from '@food-dash/money';
-import { fetchOrder, subscribeToOrder } from '../lib/orders';
+import {
+  fetchOrder, subscribeToOrder, ORDER_STEPS as STEPS, stepFor, statusLabel,
+} from '../lib/orders';
 import { Loading, EmptyState } from '../components/states';
-
-const STEPS = [
-  'Order placed',
-  'Restaurant confirmed',
-  'Preparing your food',
-  'On the way',
-  'Delivered',
-];
-
-// The two lifecycles collapsed into one line the customer can read. The rider
-// half takes over once the food leaves the kitchen, which is why delivery
-// status is checked before the kitchen's.
-function stepFor(order) {
-  if (order.deliveryStatus === 'delivered') return 4;
-  if (order.deliveryStatus === 'picked_up') return 3;
-  if (order.status === 'preparing' || order.status === 'ready_for_pickup') return 2;
-  if (order.status === 'confirmed') return 1;
-  return 0;
-}
 
 function subtitleFor(order) {
   if (order.deliveryStatus === 'assigned') return 'A rider is on the way to the restaurant';
@@ -56,11 +39,7 @@ export default function TrackingScreen({ route, navigation }) {
         back={{ label: 'Restaurants', onPress: () => navigation.popToTop() }}
         title={`Order #${orderNumber}`}
       >
-        {order ? (
-          <HeaderStatusPill
-            label={order.status === 'cancelled' ? 'Cancelled' : STEPS[stepFor(order)]}
-          />
-        ) : null}
+        {order ? <HeaderStatusPill label={statusLabel(order)} /> : null}
       </CoralHeader>
       {children}
     </View>

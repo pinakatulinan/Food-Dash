@@ -19,8 +19,49 @@ function toOrder(row) {
     deliveryStatus: row.delivery_status,
     totalCents: row.total_cents,
     cancellationReason: row.cancellation_reason,
+    placedAt: row.created_at,
     restaurant: row.restaurants?.name ?? 'Restaurant',
   };
+}
+
+// The customer-facing timeline. Two lifecycles run in the database — the
+// kitchen's and the rider's — and this is where they collapse into one line a
+// customer can read. Lives here so the tracking screen and the order list can
+// never describe the same order differently.
+export const ORDER_STEPS = [
+  'Order placed',
+  'Restaurant confirmed',
+  'Preparing your food',
+  'On the way',
+  'Delivered',
+];
+
+export function stepFor(order) {
+  if (order.deliveryStatus === 'delivered') return 4;
+  if (order.deliveryStatus === 'picked_up') return 3;
+  if (order.status === 'preparing' || order.status === 'ready_for_pickup') return 2;
+  if (order.status === 'confirmed') return 1;
+  return 0;
+}
+
+export function statusLabel(order) {
+  return order.status === 'cancelled' ? 'Cancelled' : ORDER_STEPS[stepFor(order)];
+}
+
+export function isFinished(order) {
+  return order.status === 'cancelled' || order.deliveryStatus === 'delivered';
+}
+
+/** Every order this customer has placed. RLS scopes it to them. */
+export async function fetchMyOrders() {
+  const { data, error } = await supabase
+    .from('orders')
+    .select(ORDER_FIELDS)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (error) throw error;
+  return data.map(toOrder);
 }
 
 export async function fetchOrder(orderId) {

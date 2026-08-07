@@ -8,7 +8,9 @@ import { colors, semantic, spacing, radius, typography } from '@food-dash/theme'
 // `action` is a quiet secondary control in the top-right — account actions,
 // not tasks. Styled as coral text rather than a button so it never reads as
 // the screen's CTA.
-export function CoralHeader({ title, subtitle, back, action, children }) {
+export function CoralHeader({ title, subtitle, back, action, actions, children }) {
+  // `actions` for several, `action` for one — both land in the same row.
+  const actionList = actions ?? (action ? [action] : []);
   return (
     <View style={styles.header}>
       {back ? (
@@ -22,15 +24,18 @@ export function CoralHeader({ title, subtitle, back, action, children }) {
       ) : null}
       <View style={styles.headerTop}>
         <Text style={styles.headerTitle}>{title}</Text>
-        {action ? (
-          <Pressable
-            onPress={action.onPress}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            style={({ pressed }) => pressed && { opacity: 0.6 }}
-          >
-            <Text style={styles.headerAction}>{action.label}</Text>
-          </Pressable>
-        ) : null}
+        <View style={styles.headerActions}>
+          {actionList.map((a) => (
+            <Pressable
+              key={a.label}
+              onPress={a.onPress}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={({ pressed }) => pressed && { opacity: 0.6 }}
+            >
+              <Text style={styles.headerAction}>{a.label}</Text>
+            </Pressable>
+          ))}
+        </View>
       </View>
       {subtitle ? <Text style={styles.headerSubtitle}>{subtitle}</Text> : null}
       {children}
@@ -156,6 +161,7 @@ const styles = StyleSheet.create({
     color: semantic.headerTitle,
     flexShrink: 1,
   },
+  headerActions: { flexDirection: 'row', alignItems: 'center' },
   headerAction: {
     marginLeft: spacing.md,
     fontSize: typography.caption,

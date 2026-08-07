@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "Kaon Rider",
+    "slug": "kaon-rider",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": { "backgroundColor": "#FFD9C9" },
+    "android": { "package": "ph.kaon.rider" }
+  }
+}

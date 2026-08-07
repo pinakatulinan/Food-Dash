@@ -1,0 +1,51 @@
+/* Style C tokens for the web dashboard */
+:root {
+  --coral-pastel: #FFD9C9;
+  --coral-deep: #D85A30;
+  --coral-text-dark: #7A3A1F;
+  --coral-text-mid: #8A4A2F;
+  --mint-pastel: #CFF0E8;
+  --teal-text-dark: #1F5F4F;
+  --white: #FFFFFF;
+  --border: #E2E2E2;
+  --divider: #EEEEEE;
+  --text-primary: #1A1A1A;
+  --text-muted: #8A8A8A;
+}
+* { box-sizing: border-box; margin: 0; }
+body { font-family: system-ui, -apple-system, sans-serif; background: var(--white); color: var(--text-primary); }
+.header { background: var(--coral-pastel); padding: 20px 24px; }
+.header h1 { font-size: 20px; font-weight: 500; color: var(--coral-text-dark); }
+.header p { font-size: 13px; color: var(--coral-text-mid); margin-top: 2px; }
+.toggle { margin-top: 10px; display: inline-flex; align-items: center; gap: 8px;
+  background: var(--white); border-radius: 999px; padding: 5px 14px;
+  font-size: 12px; font-weight: 500; color: var(--teal-text-dark); cursor: pointer; border: none; }
+.main { padding: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; max-width: 1100px; }
+.col h2 { font-size: 15px; font-weight: 500; margin-bottom: 10px; }
+.card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+.card .row { display: flex; justify-content: space-between; align-items: center; }
+.card .num { font-weight: 500; font-size: 14px; }
+.card .meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.pill { background: var(--mint-pastel); color: var(--teal-text-dark); font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 999px; }
+.cta { background: var(--coral-deep); color: var(--white); border: none; border-radius: 8px;
+  padding: 9px 14px; font-size: 13px; font-weight: 500; cursor: pointer; margin-top: 10px; width: 100%; }
+.cta.secondary { background: var(--white); color: var(--coral-deep); border: 1px solid var(--border); }
+.items { border-top: 1px solid var(--divider); margin-top: 8px; padding-top: 8px; font-size: 13px; }
+.items div { display: flex; justify-content: space-between; padding: 2px 0; }
+
+.header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.link { background: none; border: none; cursor: pointer; font-size: 13px;
+  font-weight: 500; color: var(--coral-text-mid); padding: 0; }
+
+.login { padding: 24px; max-width: 380px; }
+.field { display: block; margin-bottom: 12px; }
+.field span { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+.field input { width: 100%; padding: 10px 12px; font-size: 14px; font-family: inherit;
+  color: var(--text-primary); background: var(--white);
+  border: 1px solid var(--border); border-radius: 8px; }
+
+/* Deep coral as text — the only alerting tone in the palette, kept as text so
+   it never competes with the single coral CTA. */
+.error { font-size: 13px; color: var(--coral-deep); margin-top: 8px; }
+.error.banner { padding: 12px 24px 0; }
+.hint { font-size: 12px; color: var(--text-muted); margin-top: 10px; }

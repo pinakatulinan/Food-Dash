@@ -1,0 +1,11 @@
+{
+  "name": "@kaon/ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "ui.js",
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  }
+}

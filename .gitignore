@@ -1,0 +1,12 @@
+node_modules/
+
+# Real keys never get committed — only .env.example does.
+.env
+.env.local
+
+# Build output
+dist/
+.expo/
+web-build/
+
+.DS_Store

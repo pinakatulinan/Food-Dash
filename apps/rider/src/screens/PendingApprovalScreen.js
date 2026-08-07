@@ -1,0 +1,51 @@
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { CoralHeader, Card, HeaderStatusPill } from '@kaon/ui';
+import { colors, spacing, typography } from '@kaon/theme';
+
+// Shown when a rider account exists but isn't approved. The database enforces
+// this too — the check constraint on riders makes going online impossible
+// while status is 'pending', so this screen explains rather than protects.
+export default function PendingApprovalScreen({ status, onSignOut }) {
+  const suspended = status === 'suspended';
+
+  return (
+    <View style={styles.screen}>
+      <CoralHeader
+        title={suspended ? 'Account suspended' : 'Application received'}
+        subtitle="Kaon Rider"
+        action={{ label: 'Sign out', onPress: onSignOut }}
+      >
+        <HeaderStatusPill label={suspended ? 'Suspended' : 'Pending review'} />
+      </CoralHeader>
+      <View style={styles.body}>
+        <Card>
+          <Text style={styles.title}>
+            {suspended ? 'You can’t take orders right now' : 'We’re checking your details'}
+          </Text>
+          <Text style={styles.detail}>
+            {suspended
+              ? 'Please get in touch with the Kaon team to sort this out.'
+              : 'Bring your driver’s licence, OR/CR and a valid ID to the Kaon team. Once you’re approved this screen becomes your order list.'}
+          </Text>
+        </Card>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.white },
+  body: { padding: spacing.screenPadding },
+  title: {
+    fontSize: typography.body,
+    fontWeight: typography.medium,
+    color: colors.textPrimary,
+  },
+  detail: {
+    marginTop: spacing.xs,
+    fontSize: typography.caption,
+    color: colors.textMuted,
+    lineHeight: 18,
+  },
+});

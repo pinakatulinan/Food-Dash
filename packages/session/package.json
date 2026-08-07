@@ -1,5 +1,5 @@
 {
-  "name": "@kaon/session",
+  "name": "@food-dash/session",
   "version": "0.1.0",
   "private": true,
   "type": "module",

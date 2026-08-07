@@ -3,7 +3,7 @@
 // mint = status only, white pill for status shown on the coral header.
 import React from 'react';
 import { View, Text, TextInput, Pressable, Modal, StyleSheet } from 'react-native';
-import { colors, semantic, spacing, radius, typography } from '@kaon/theme';
+import { colors, semantic, spacing, radius, typography } from '@food-dash/theme';
 
 // `action` is a quiet secondary control in the top-right — account actions,
 // not tasks. Styled as coral text rather than a button so it never reads as

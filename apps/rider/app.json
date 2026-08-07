@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Kaon Rider",
-    "slug": "kaon-rider",
+    "name": "Food-Dash Rider",
+    "slug": "food-dash-rider",
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "splash": { "backgroundColor": "#FFD9C9" },
-    "android": { "package": "ph.kaon.rider" }
+    "android": { "package": "ph.fooddash.rider" }
   }
 }

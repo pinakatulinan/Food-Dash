@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, SectionList, Pressable, StyleSheet } from 'react-native';
-import { CoralHeader, HeaderStatusPill, PrimaryButton } from '@kaon/ui';
-import { colors, spacing, typography, radius } from '@kaon/theme';
-import { formatMoney } from '@kaon/money';
+import { CoralHeader, HeaderStatusPill, PrimaryButton } from '@food-dash/ui';
+import { colors, spacing, typography, radius } from '@food-dash/theme';
+import { formatMoney } from '@food-dash/money';
 import { fetchMenu } from '../lib/catalog';
 import { useAsync } from '../lib/useAsync';
 import { Loading, EmptyState } from '../components/states';

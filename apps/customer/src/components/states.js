@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { colors, spacing, typography } from '@kaon/theme';
+import { colors, spacing, typography } from '@food-dash/theme';
 
 // Neutral by design: content below a coral header stays white and muted, so
 // loading and empty states never compete with the header or the screen's CTA.

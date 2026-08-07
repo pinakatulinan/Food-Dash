@@ -3,7 +3,7 @@ import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
-import { colors, spacing, typography } from '@kaon/theme';
+import { colors, spacing, typography } from '@food-dash/theme';
 import { supabase } from './src/lib/supabase';
 import { useSession } from './src/lib/useSession';
 import { fetchRiderRecord } from './src/lib/rider';

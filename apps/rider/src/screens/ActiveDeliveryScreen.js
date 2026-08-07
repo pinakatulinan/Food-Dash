@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Linking } from 'react-native';
-import { CoralHeader, HeaderStatusPill, Card, PrimaryButton, ErrorText } from '@kaon/ui';
-import { colors, spacing, typography } from '@kaon/theme';
-import { formatMoney } from '@kaon/money';
+import { CoralHeader, HeaderStatusPill, Card, PrimaryButton, ErrorText } from '@food-dash/ui';
+import { colors, spacing, typography } from '@food-dash/theme';
+import { formatMoney } from '@food-dash/money';
 import { advanceDelivery } from '../lib/rider';
 
 // Mirrors the delivery_status enum in the database. 'unassigned' never

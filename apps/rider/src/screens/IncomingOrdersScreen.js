@@ -1,8 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, Switch, RefreshControl } from 'react-native';
-import { CoralHeader, Card, PrimaryButton, ErrorText } from '@kaon/ui';
-import { colors, spacing, typography } from '@kaon/theme';
-import { formatMoney } from '@kaon/money';
+import { CoralHeader, Card, PrimaryButton, ErrorText } from '@food-dash/ui';
+import { colors, spacing, typography } from '@food-dash/theme';
+import { formatMoney } from '@food-dash/money';
 import {
   fetchAvailableOrders, acceptOrder, setOnline, subscribeToOrders,
 } from '../lib/rider';

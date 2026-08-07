@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 export default defineConfig({
   plugins: [react()],
   server: {
-    // The @kaon/* packages live above this app's root — let Vite read them.
+    // The @food-dash/* packages live above this app's root — let Vite read them.
     fs: { allow: [fileURLToPath(new URL('../..', import.meta.url))] },
   },
 });

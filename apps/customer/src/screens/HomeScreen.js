@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
-import { CoralHeader, StatusPill, Card, ConfirmDialog } from '@kaon/ui';
-import { colors, spacing, typography, radius } from '@kaon/theme';
-import { formatMoney } from '@kaon/money';
+import { CoralHeader, StatusPill, Card, ConfirmDialog } from '@food-dash/ui';
+import { colors, spacing, typography, radius } from '@food-dash/theme';
+import { formatMoney } from '@food-dash/money';
 import { supabase } from '../lib/supabase';
 import { fetchRestaurants } from '../lib/catalog';
 import { useAsync } from '../lib/useAsync';

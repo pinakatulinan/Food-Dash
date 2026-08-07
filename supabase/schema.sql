@@ -1,4 +1,4 @@
--- Kaon Delivery — Supabase schema
+-- Food-Dash — Supabase schema
 -- Run in Supabase SQL editor. Assumes Supabase Auth manages auth.users.
 
 -- ============ ENUMS ============

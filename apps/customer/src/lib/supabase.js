@@ -11,7 +11,7 @@ if (!url || !anonKey) {
   throw new Error(
     'Missing EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY.\n' +
       'Copy apps/customer/.env.example to .env, fill it in, then restart with:\n' +
-      '  npm start -w kaon-customer -- --clear'
+      '  npm start -w food-dash-customer -- --clear'
   );
 }
 

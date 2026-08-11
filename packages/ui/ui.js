@@ -137,6 +137,58 @@ export function Card({ children, style }) {
   return <View style={[styles.card, style]}>{children}</View>;
 }
 
+/**
+ * Quantity control for a basket line.
+ *
+ * Deliberately outlined rather than coral: the basket's one deep-coral CTA is
+ * "Place order", and a row of coral steppers would read as five competing
+ * buttons. At qty 1 the minus becomes a remove, which is why the label is
+ * driven by the caller rather than assumed here.
+ */
+export function QtyStepper({ qty, onDecrement, onIncrement, decrementLabel = '−' }) {
+  return (
+    <View style={styles.stepper}>
+      <Pressable
+        onPress={onDecrement}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        style={({ pressed }) => [styles.stepperBtn, pressed && { opacity: 0.5 }]}
+      >
+        <Text style={styles.stepperSymbol}>{decrementLabel}</Text>
+      </Pressable>
+      <Text style={styles.stepperQty}>{qty}</Text>
+      <Pressable
+        onPress={onIncrement}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        style={({ pressed }) => [styles.stepperBtn, pressed && { opacity: 0.5 }]}
+      >
+        <Text style={styles.stepperSymbol}>+</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+/**
+ * A row the user picks from a short list — saved addresses, for now.
+ *
+ * Selection is shown with a coral dot and weight rather than a filled surface,
+ * because mint is reserved for status and coral fills are reserved for the CTA.
+ */
+export function SelectRow({ title, detail, selected, onPress, trailing }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.selectRow, pressed && { opacity: 0.6 }]}
+    >
+      <View style={[styles.selectDot, selected && styles.selectDotOn]} />
+      <View style={styles.selectText}>
+        <Text style={selected ? styles.selectTitleOn : styles.selectTitle}>{title}</Text>
+        {detail ? <Text style={styles.selectDetail}>{detail}</Text> : null}
+      </View>
+      {trailing}
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   header: {
     backgroundColor: semantic.headerBg,
@@ -268,4 +320,53 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     padding: spacing.md,
   },
+  stepper: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  stepperBtn: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepperSymbol: {
+    fontSize: 15,
+    lineHeight: 18,
+    color: colors.textPrimary,
+  },
+  stepperQty: {
+    minWidth: 16,
+    textAlign: 'center',
+    fontSize: typography.body,
+    fontWeight: typography.medium,
+    color: colors.textPrimary,
+  },
+  selectRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.divider,
+  },
+  selectDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+  },
+  selectDotOn: {
+    backgroundColor: colors.coralDeep,
+    borderColor: colors.coralDeep,
+  },
+  selectText: { flex: 1 },
+  selectTitle: { fontSize: typography.body, color: colors.textPrimary },
+  selectTitleOn: {
+    fontSize: typography.body,
+    fontWeight: typography.medium,
+    color: colors.textPrimary,
+  },
+  selectDetail: { marginTop: 2, fontSize: typography.caption, color: colors.textMuted },
 });

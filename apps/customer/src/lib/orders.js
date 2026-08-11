@@ -52,6 +52,19 @@ export function isFinished(order) {
   return order.status === 'cancelled' || order.deliveryStatus === 'delivered';
 }
 
+/**
+ * Whether the customer may still call this off.
+ *
+ * Mirrors the rule inside cancel_order(): once the kitchen accepts, food may
+ * already be cooking and it stops being the customer's call. The database is
+ * the authority — this only decides whether to offer the button, so a stale
+ * screen shows a button that fails loudly rather than one that quietly works
+ * when it shouldn't.
+ */
+export function isCancellable(order) {
+  return order.status === 'pending';
+}
+
 /** Every order this customer has placed. RLS scopes it to them. */
 export async function fetchMyOrders() {
   const { data, error } = await supabase
@@ -87,6 +100,41 @@ export function subscribeToOrder(orderId, onChange) {
     .subscribe();
 
   return () => supabase.removeChannel(channel);
+}
+
+/**
+ * Who is bringing this order, and how to reach them.
+ *
+ * profiles is readable only by its owner, so this goes through
+ * order_rider_contact() (migration 007), which returns just a name and phone
+ * and only while a rider is actually carrying the order. Returns null before
+ * assignment and after delivery — both are normal, not errors.
+ */
+export async function fetchRiderContact(orderId) {
+  const { data, error } = await supabase.rpc('order_rider_contact', {
+    p_order_id: orderId,
+  });
+
+  if (error) throw error;
+
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) return null;
+  return { name: row.full_name, phone: row.phone };
+}
+
+/**
+ * Cancels the order.
+ *
+ * No reason is collected from customers on purpose: the one case they can
+ * cancel in is "changed my mind before the kitchen accepted", and a required
+ * free-text box there is friction that produces nothing anyone reads.
+ */
+export async function cancelOrder(orderId) {
+  const { error } = await supabase.rpc('cancel_order', {
+    p_order_id: orderId,
+    p_reason: null,
+  });
+  if (error) throw error;
 }
 
 export async function placeOrder({ restaurant, cart, address, notes }) {

@@ -19,8 +19,62 @@ function toOrder(row) {
     deliveryStatus: row.delivery_status,
     totalCents: row.total_cents,
     cancellationReason: row.cancellation_reason,
+    placedAt: row.created_at,
     restaurant: row.restaurants?.name ?? 'Restaurant',
   };
+}
+
+// The customer-facing timeline. Two lifecycles run in the database — the
+// kitchen's and the rider's — and this is where they collapse into one line a
+// customer can read. Lives here so the tracking screen and the order list can
+// never describe the same order differently.
+export const ORDER_STEPS = [
+  'Order placed',
+  'Restaurant confirmed',
+  'Preparing your food',
+  'On the way',
+  'Delivered',
+];
+
+export function stepFor(order) {
+  if (order.deliveryStatus === 'delivered') return 4;
+  if (order.deliveryStatus === 'picked_up') return 3;
+  if (order.status === 'preparing' || order.status === 'ready_for_pickup') return 2;
+  if (order.status === 'confirmed') return 1;
+  return 0;
+}
+
+export function statusLabel(order) {
+  return order.status === 'cancelled' ? 'Cancelled' : ORDER_STEPS[stepFor(order)];
+}
+
+export function isFinished(order) {
+  return order.status === 'cancelled' || order.deliveryStatus === 'delivered';
+}
+
+/**
+ * Whether the customer may still call this off.
+ *
+ * Mirrors the rule inside cancel_order(): once the kitchen accepts, food may
+ * already be cooking and it stops being the customer's call. The database is
+ * the authority — this only decides whether to offer the button, so a stale
+ * screen shows a button that fails loudly rather than one that quietly works
+ * when it shouldn't.
+ */
+export function isCancellable(order) {
+  return order.status === 'pending';
+}
+
+/** Every order this customer has placed. RLS scopes it to them. */
+export async function fetchMyOrders() {
+  const { data, error } = await supabase
+    .from('orders')
+    .select(ORDER_FIELDS)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (error) throw error;
+  return data.map(toOrder);
 }
 
 export async function fetchOrder(orderId) {
@@ -46,6 +100,41 @@ export function subscribeToOrder(orderId, onChange) {
     .subscribe();
 
   return () => supabase.removeChannel(channel);
+}
+
+/**
+ * Who is bringing this order, and how to reach them.
+ *
+ * profiles is readable only by its owner, so this goes through
+ * order_rider_contact() (migration 007), which returns just a name and phone
+ * and only while a rider is actually carrying the order. Returns null before
+ * assignment and after delivery — both are normal, not errors.
+ */
+export async function fetchRiderContact(orderId) {
+  const { data, error } = await supabase.rpc('order_rider_contact', {
+    p_order_id: orderId,
+  });
+
+  if (error) throw error;
+
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) return null;
+  return { name: row.full_name, phone: row.phone };
+}
+
+/**
+ * Cancels the order.
+ *
+ * No reason is collected from customers on purpose: the one case they can
+ * cancel in is "changed my mind before the kitchen accepted", and a required
+ * free-text box there is friction that produces nothing anyone reads.
+ */
+export async function cancelOrder(orderId) {
+  const { error } = await supabase.rpc('cancel_order', {
+    p_order_id: orderId,
+    p_reason: null,
+  });
+  if (error) throw error;
 }
 
 export async function placeOrder({ restaurant, cart, address, notes }) {

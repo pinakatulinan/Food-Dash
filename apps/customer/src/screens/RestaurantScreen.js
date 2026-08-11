@@ -1,15 +1,24 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, SectionList, Pressable, StyleSheet } from 'react-native';
-import { CoralHeader, HeaderStatusPill, PrimaryButton } from '@food-dash/ui';
+import {
+  CoralHeader, HeaderStatusPill, PrimaryButton, ConfirmDialog,
+} from '@food-dash/ui';
 import { colors, spacing, typography, radius } from '@food-dash/theme';
 import { formatMoney } from '@food-dash/money';
 import { fetchMenu } from '../lib/catalog';
+import { useCart } from '../lib/cart';
 import { useAsync } from '../lib/useAsync';
 import { Loading, EmptyState } from '../components/states';
 
 export default function RestaurantScreen({ route, navigation }) {
   const { restaurant } = route.params;
-  const [cart, setCart] = useState({}); // { itemId: { item, qty } }
+  const {
+    entries, subtotalCents, addItem, startNewBasket, isFromAnotherRestaurant,
+  } = useCart();
+
+  // Set when adding an item would discard another restaurant's basket. Holds
+  // the item so it can be added once the customer confirms.
+  const [replacing, setReplacing] = useState(null);
 
   const { data: menu, error, loading } = useAsync(
     () => fetchMenu(restaurant.id),
@@ -24,10 +33,15 @@ export default function RestaurantScreen({ route, navigation }) {
     return Object.entries(byCat).map(([title, data]) => ({ title, data }));
   }, [menu]);
 
-  const addItem = (item) =>
-    setCart((c) => ({ ...c, [item.id]: { item, qty: (c[item.id]?.qty || 0) + 1 } }));
-
-  const cartTotalCents = Object.values(cart).reduce((s, e) => s + e.item.priceCents * e.qty, 0);
+  // One basket, one restaurant — multi-restaurant carts are out of the MVP.
+  // Rather than silently dropping the old basket, ask.
+  const add = (item) => {
+    if (isFromAnotherRestaurant(restaurant.id)) {
+      setReplacing(item);
+      return;
+    }
+    addItem(item, restaurant);
+  };
 
   return (
     <View style={styles.screen}>
@@ -65,21 +79,35 @@ export default function RestaurantScreen({ route, navigation }) {
                 ) : null}
                 <Text style={styles.itemPrice}>{formatMoney(item.priceCents)}</Text>
               </View>
-              <Pressable style={styles.addBtn} onPress={() => addItem(item)}>
+              <Pressable style={styles.addBtn} onPress={() => add(item)}>
                 <Text style={styles.addBtnText}>+</Text>
               </Pressable>
             </View>
           )}
         />
       )}
-      {cartTotalCents > 0 && (
+      {/* Only this restaurant's basket gets a bar — showing another
+          restaurant's total under this menu would be nonsense. */}
+      {entries.length > 0 && !isFromAnotherRestaurant(restaurant.id) && (
         <View style={{ padding: spacing.screenPadding }}>
           <PrimaryButton
-            label={`View basket · ${formatMoney(cartTotalCents)}`}
-            onPress={() => navigation.navigate('Cart', { cart, restaurant })}
+            label={`View basket · ${formatMoney(subtotalCents)}`}
+            onPress={() => navigation.navigate('Cart')}
           />
         </View>
       )}
+
+      <ConfirmDialog
+        visible={replacing != null}
+        title="Start a new basket?"
+        message={`Your basket has food from another restaurant. Adding ${replacing?.name} will empty it.`}
+        confirmLabel="Start new basket"
+        onConfirm={() => {
+          startNewBasket(replacing, restaurant);
+          setReplacing(null);
+        }}
+        onCancel={() => setReplacing(null)}
+      />
     </View>
   );
 }

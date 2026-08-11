@@ -47,7 +47,10 @@ export default function HomeScreen({ navigation }) {
       <CoralHeader
         title="Kaon ta!"
         subtitle="Deliver to Talisay City"
-        action={{ label: 'Sign out', onPress: () => setConfirming(true) }}
+        actions={[
+          { label: 'Orders', onPress: () => navigation.navigate('Orders') },
+          { label: 'Sign out', onPress: () => setConfirming(true) },
+        ]}
       />
       {loading ? (
         <Loading />

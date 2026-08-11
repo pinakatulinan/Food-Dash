@@ -5,7 +5,17 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "splash": { "backgroundColor": "#FFD9C9" },
-    "android": { "package": "ph.fooddash.rider" }
+    "splash": {
+      "backgroundColor": "#FFD9C9"
+    },
+    "android": {
+      "package": "ph.fooddash.rider"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "11e99157-d4ca-44d1-9fba-1ea491bcdeab"
+      }
+    },
+    "owner": "akosikyle143"
   }
 }

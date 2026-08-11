@@ -5,8 +5,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import { colors } from '@food-dash/theme';
 import { useSession } from './src/lib/useSession';
+import { CartProvider } from './src/lib/cart';
 import AuthScreen from './src/screens/AuthScreen';
 import HomeScreen from './src/screens/HomeScreen';
+import OrdersScreen from './src/screens/OrdersScreen';
 import RestaurantScreen from './src/screens/RestaurantScreen';
 import CartScreen from './src/screens/CartScreen';
 import TrackingScreen from './src/screens/TrackingScreen';
@@ -27,20 +29,25 @@ export default function App() {
     );
   }
 
+  // The basket lives above the navigator so it survives moving between the
+  // menu and the cart, and is restored from storage on a cold start.
   return (
-    <NavigationContainer>
-      <StatusBar style="dark" />
-      {session ? (
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="Restaurant" component={RestaurantScreen} />
-          <Stack.Screen name="Cart" component={CartScreen} />
-          <Stack.Screen name="Tracking" component={TrackingScreen} />
-        </Stack.Navigator>
-      ) : (
-        <AuthScreen />
-      )}
-    </NavigationContainer>
+    <CartProvider>
+      <NavigationContainer>
+        <StatusBar style="dark" />
+        {session ? (
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="Orders" component={OrdersScreen} />
+            <Stack.Screen name="Restaurant" component={RestaurantScreen} />
+            <Stack.Screen name="Cart" component={CartScreen} />
+            <Stack.Screen name="Tracking" component={TrackingScreen} />
+          </Stack.Navigator>
+        ) : (
+          <AuthScreen />
+        )}
+      </NavigationContainer>
+    </CartProvider>
   );
 }
 

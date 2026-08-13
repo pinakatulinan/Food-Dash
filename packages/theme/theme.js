@@ -76,15 +76,43 @@ export const typography = {
   // Weights (React Native fontWeight strings)
   regular: '400',
   medium: '500',     // Use for all emphasis — avoid '600'/'700', too heavy for this style
+
+  // ---- Browse scale (customer Home + Restaurant only) ----
+  // The marketplace screens carry no coral header, so type does the work the
+  // header used to do and has to be heavier to hold a page together. These are
+  // additive: Style C screens keep using the sizes above, unchanged.
+  hero: 28,          // Restaurant name over its banner
+  title: 22,         // "All restaurants", screen-level headings
+  subhead: 15,       // Card titles — restaurant and dish names
+  semibold: '600',
+  bold: '700',
 };
 
-// Style C layout rules (from the approved mockups):
+// Browse-screen surfaces. Style C puts content on plain white under a coral
+// header; the marketplace screens instead separate sections with a tinted
+// page background and white cards floating on it.
+export const browse = {
+  pageBg: '#FFFFFF',
+  sectionBg: '#FAFAFA',    // Behind card lists, to lift white cards off the page
+  imageFallback: '#F2EDEA', // Tile behind a generated placeholder
+  overlay: 'rgba(0,0,0,0.45)', // Scrim over a banner so white text stays legible
+  chipBg: '#F4F4F4',
+  chipActiveBg: colors.coralDeep,
+  chipText: colors.textSecondary,
+  chipActiveText: colors.white,
+};
+
+// Style C layout rules (from the approved mockups). These apply to the RIDER
+// APP and RESTAURANT DASHBOARD — staff tools, where reading speed beats looks.
+// The customer app follows the marketplace system instead (see README): no
+// coloured header block, imagery carrying the weight, coral as an accent only.
 // 1. Every screen opens with a coralPastel header block containing
 //    the screen title + key context.
 // 2. Exactly ONE coralDeep CTA per screen.
 // 3. Mint means status — never use it for actions.
+//    (This one rule holds in BOTH systems. Mint is status, everywhere.)
 // 4. Status shown ON the coral header uses a white pill with teal text.
 // 5. Content below the header stays neutral: white bg, divider lines,
 //    muted secondary text.
 
-export default { colors, semantic, spacing, radius, typography };
+export default { colors, semantic, browse, spacing, radius, typography };

@@ -2,11 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Pressable,
 } from 'react-native';
-import {
-  CoralHeader, StatusPill, PrimaryButton, Field, ErrorText, QtyStepper,
-  SelectRow, TextLink,
-} from '@food-dash/ui';
-import { colors, spacing, typography } from '@food-dash/theme';
+import { StatusPill, ErrorText, QtyStepper, SelectRow } from '@food-dash/ui';
+import { ScreenHeader, Button, Input } from '../components/chrome';
+import { colors, browse, spacing, radius, typography } from '@food-dash/theme';
 import { formatMoney } from '@food-dash/money';
 import { placeOrder } from '../lib/orders';
 import { fetchMenu } from '../lib/catalog';
@@ -101,10 +99,12 @@ export default function CartScreen({ navigation }) {
     }
   };
 
+  // One header for every branch of this screen — loading, empty, and the real
+  // thing. It used to be declared twice, which is how the two drifted apart.
   const header = (children) => (
     <View style={styles.screen}>
-      <CoralHeader
-        back={{ label: 'Menu', onPress: () => navigation.goBack() }}
+      <ScreenHeader
+        onBack={() => navigation.goBack()}
         title="Your basket"
         subtitle={restaurant ? `From ${restaurant.name}` : undefined}
       />
@@ -133,8 +133,8 @@ export default function CartScreen({ navigation }) {
       style={styles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <CoralHeader
-        back={{ label: 'Menu', onPress: () => navigation.goBack() }}
+      <ScreenHeader
+        onBack={() => navigation.goBack()}
         title="Your basket"
         subtitle={`From ${restaurant.name}`}
       />
@@ -189,14 +189,14 @@ export default function CartScreen({ navigation }) {
 
         {selectedId === NEW_ADDRESS ? (
           <View style={styles.newAddress}>
-            <Field
+            <Input
               label="Address"
               value={newAddress}
               onChangeText={setNewAddress}
               placeholder="House no., street, barangay"
               autoCapitalize="words"
             />
-            <Field
+            <Input
               label="Name it (optional)"
               value={newLabel}
               onChangeText={setNewLabel}
@@ -213,7 +213,7 @@ export default function CartScreen({ navigation }) {
         ) : null}
 
         <View style={styles.notes}>
-          <Field
+          <Input
             label="Notes for the rider (optional)"
             value={notes}
             onChangeText={setNotes}
@@ -226,7 +226,7 @@ export default function CartScreen({ navigation }) {
 
         <ErrorText>{error}</ErrorText>
 
-        <PrimaryButton
+        <Button
           label={placing ? 'Placing order…' : 'Place order'}
           onPress={submit}
           disabled={placing || !addressText.trim() || isEmpty}
@@ -273,7 +273,7 @@ function Row({ label, value, muted, bold }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.white },
+  screen: { flex: 1, backgroundColor: browse.pageBg },
   row: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     gap: spacing.md,
@@ -290,8 +290,9 @@ const styles = StyleSheet.create({
   totals: { paddingVertical: spacing.md, marginBottom: spacing.md },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 3 },
   sectionLabel: {
-    fontSize: typography.pill,
-    color: colors.textMuted,
+    fontSize: typography.subhead,
+    fontWeight: typography.semibold,
+    color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   newAddress: { marginTop: spacing.md },
@@ -312,9 +313,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   notice: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-    borderRadius: 8,
+    backgroundColor: browse.sectionBg,
+    borderRadius: radius.lg,
     padding: spacing.md,
     marginBottom: spacing.md,
   },

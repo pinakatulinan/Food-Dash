@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { formatMoney } from '@food-dash/money';
 import { supabase } from './lib/supabase';
 import { useSession } from './lib/useSession';
@@ -6,7 +6,9 @@ import {
   fetchMyRestaurant, setOpen, fetchOrders, advanceOrder, rejectOrder,
   subscribeToOrders,
 } from './lib/dashboard';
+import { enableAlerts, alertsReady, startAlerting, stopAlerting } from './lib/alerts';
 import Login from './Login';
+import Menu from './Menu';
 
 // Columns are the kitchen's lifecycle. Once an order is ready_for_pickup it
 // belongs to the rider, so this dashboard stops acting on it.
@@ -38,6 +40,11 @@ function Dashboard({ userId }) {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(null);
   const [busyId, setBusyId] = useState(null);
+  const [tab, setTab] = useState('orders');
+  const [alertsOn, setAlertsOn] = useState(alertsReady());
+  // Which pending orders we've already sounded for, so a refetch caused by a
+  // rider claiming some other order doesn't set the alarm off again.
+  const alerted = useRef(new Set());
 
   const loadOrders = useCallback(async (restaurantId) => {
     try {
@@ -70,6 +77,44 @@ function Dashboard({ userId }) {
     return subscribeToOrders(restaurant.id, () => loadOrders(restaurant.id));
   }, [restaurant, loadOrders]);
 
+  // Alerting is driven by what's on the board, not by realtime events — a
+  // dropped socket or a manual refetch both end up here, so the alarm state
+  // always matches what a person would see rather than what arrived over the
+  // wire. Sounds once per new order, then repeats while any sit unaccepted.
+  useEffect(() => {
+    const pending = orders.filter((o) => o.status === 'pending');
+    const pendingIds = pending.map((o) => o.id);
+
+    if (pendingIds.length === 0) {
+      stopAlerting();
+      alerted.current.clear();
+      document.title = 'Food-Dash';
+      return;
+    }
+
+    // Visible even when the tab is in the background and the sound was denied.
+    document.title = `(${pendingIds.length}) New order — Food-Dash`;
+
+    const fresh = pendingIds.filter((id) => !alerted.current.has(id));
+    if (fresh.length) {
+      fresh.forEach((id) => alerted.current.add(id));
+      startAlerting(pendingIds.length);
+    }
+  }, [orders]);
+
+  // Stop the timer if the dashboard is closed mid-alarm.
+  useEffect(() => stopAlerting, []);
+
+  const turnOnAlerts = async () => {
+    const { sound, notifications } = await enableAlerts();
+    setAlertsOn(sound);
+    if (!notifications) {
+      setError(
+        'Sound is on, but desktop notifications were blocked. Allow them in your browser to get alerts when this window is behind something else.',
+      );
+    }
+  };
+
   const act = async (id, fn) => {
     setBusyId(id);
     setError(null);
@@ -85,8 +130,10 @@ function Dashboard({ userId }) {
   const toggleOpen = async () => {
     setError(null);
     try {
-      await setOpen(restaurant.id, !restaurant.is_open);
-      setRestaurant({ ...restaurant, is_open: !restaurant.is_open });
+      // Take the row the database actually wrote rather than assuming the flip
+      // worked. Before migration 009 there was no update policy here, so this
+      // silently changed nothing and only local state moved.
+      setRestaurant(await setOpen(restaurant.id, !restaurant.is_open));
     } catch (e) {
       setError(e.message);
     }
@@ -129,10 +176,39 @@ function Dashboard({ userId }) {
         <button className="toggle" onClick={toggleOpen}>
           {restaurant.is_open ? 'Open — accepting orders' : 'Closed — click to open'}
         </button>
+        <nav className="tabs">
+          <button
+            className={tab === 'orders' ? 'tab on' : 'tab'}
+            onClick={() => setTab('orders')}
+          >
+            Orders
+          </button>
+          <button
+            className={tab === 'menu' ? 'tab on' : 'tab'}
+            onClick={() => setTab('menu')}
+          >
+            Menu
+          </button>
+        </nav>
       </header>
+
+      {/* Browsers refuse to play sound until someone has clicked the page, so
+          this cannot be armed automatically — and a dashboard that thinks it
+          is alerting when it is silent is worse than one that never claimed to. */}
+      {!alertsOn && (
+        <div className="alert-bar">
+          <span>Alerts are off — you won't hear new orders arrive.</span>
+          <button className="cta compact" onClick={turnOnAlerts}>Turn on alerts</button>
+        </div>
+      )}
 
       {error && <p className="error banner">{error}</p>}
 
+      {tab === 'menu' ? (
+        <main className="main single">
+          <Menu restaurant={restaurant} onRestaurantChange={setRestaurant} />
+        </main>
+      ) : (
       <main className="main">
         {COLUMNS.map(({ status, label, cta }) => {
           const inColumn = orders.filter((o) => o.status === status);
@@ -184,6 +260,7 @@ function Dashboard({ userId }) {
           );
         })}
       </main>
+      )}
     </>
   );
 }

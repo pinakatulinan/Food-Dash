@@ -9,7 +9,7 @@ import { supabase } from './supabase';
  */
 const ORDER_FIELDS =
   'id, order_number, status, delivery_status, total_cents, ' +
-  'cancellation_reason, created_at, restaurants(name)';
+  'cancellation_reason, created_at, restaurants(name, image_url)';
 
 function toOrder(row) {
   return {
@@ -21,6 +21,9 @@ function toOrder(row) {
     cancellationReason: row.cancellation_reason,
     placedAt: row.created_at,
     restaurant: row.restaurants?.name ?? 'Restaurant',
+    // Drives the thumbnail in the order list. Null until a restaurant has a
+    // photo, which FoodImage handles by drawing a tile instead.
+    restaurantImageUrl: row.restaurants?.image_url ?? null,
   };
 }
 

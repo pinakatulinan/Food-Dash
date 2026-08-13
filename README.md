@@ -49,7 +49,33 @@ All apps currently run on mock data (`src/lib/mockData.js` / mock arrays) so
 UI development isn't blocked while the backend is wired up. Every mock is
 marked with a `TODO` comment showing the Supabase query that replaces it.
 
-## Design system rules (Style C)
+## Design systems
+
+There are two, on purpose. Both draw from `@food-dash/theme` — never hardcode a
+hex in a screen.
+
+### Marketplace (customer app)
+
+The customer app is a consumer marketplace and follows the conventions people
+already know from every delivery app.
+
+1. No coloured header block. Screens are announced by type: a bold 22px title
+   on white, via `ScreenHeader`.
+2. Imagery carries the visual weight. Restaurants and dishes lead with a photo,
+   and `FoodImage` draws a tinted initial tile when there isn't one — so the app
+   looks finished before a single photo has been uploaded.
+3. Deep coral (`#D85A30`) is the accent, used only for actions — the CTA, the
+   basket bar, the active tab.
+4. Mint (`#CFF0E8`) means status only, never actions.
+5. Navigation is a bottom tab bar: Home, Orders, Account.
+
+Components live in `apps/customer/src/components/` — `chrome.js` for the app
+shell (header, panel, button, input, confirm sheet), `browse.js` for the
+marketplace pieces (imagery, search, category rail, cards, basket bar).
+
+### Style C (rider app, restaurant dashboard)
+
+Staff tools, where speed of reading beats visual appeal.
 
 1. Every screen opens with a pastel-coral header (`#FFD9C9`) with deep-coral text.
 2. Exactly ONE deep-coral (`#D85A30`) CTA per screen, always with white text.
@@ -57,7 +83,9 @@ marked with a `TODO` comment showing the Supabase query that replaces it.
 4. Status shown on the coral header = white pill with teal text.
 5. Content below headers stays neutral: white, hairline dividers, muted grays.
 
-All values come from `@food-dash/theme`. Never hardcode a hex in a screen.
+Components live in `packages/ui`. **The rider app depends on all of them**, so
+changing anything there changes that app too — the customer app deliberately
+keeps its own copies rather than restyling these in place.
 
 ## Accounts & registration
 

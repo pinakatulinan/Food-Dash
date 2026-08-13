@@ -5,12 +5,12 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "splash": {
-      "backgroundColor": "#FFD9C9"
-    },
     "android": {
       "package": "ph.fooddash.rider"
     },
+    "plugins": [
+      ["expo-splash-screen", { "backgroundColor": "#FFD9C9" }]
+    ],
     "extra": {
       "eas": {
         "projectId": "11e99157-d4ca-44d1-9fba-1ea491bcdeab"

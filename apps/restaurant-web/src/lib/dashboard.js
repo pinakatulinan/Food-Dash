@@ -171,6 +171,58 @@ export async function fetchOrders(restaurantId) {
   return data.map(toOrder);
 }
 
+// ============ HISTORY & TAKINGS ============
+
+/**
+ * Finished and unfinished orders since a date — the opposite of fetchOrders(),
+ * which deliberately shows only what still needs acting on.
+ *
+ * Ranged rather than "everything", because this list only grows and a
+ * restaurant asking for today's takings shouldn't pull down six months.
+ */
+export async function fetchHistory(restaurantId, sinceIso) {
+  const { data, error } = await supabase
+    .from('orders')
+    .select(
+      'id, order_number, status, delivery_status, subtotal_cents, ' +
+      'restaurant_payout_cents, dropoff_address, notes, created_at, ' +
+      'order_items(name_snapshot, price_cents_snapshot, quantity)',
+    )
+    .eq('restaurant_id', restaurantId)
+    .gte('created_at', sinceIso)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data.map(toOrder);
+}
+
+/**
+ * Totals for a set of orders.
+ *
+ * Cancelled orders are counted but contribute nothing to the money — a
+ * cancelled order is not revenue, and a takings figure that quietly includes
+ * them is a figure that disagrees with the bank. They're reported separately
+ * so the number is explainable rather than just smaller than expected.
+ *
+ * Pure and separate from the query so it can be checked without a database.
+ */
+export function summarise(orders) {
+  const counted = orders.filter((o) => o.status !== 'cancelled');
+  const grossCents = counted.reduce((sum, o) => sum + o.subtotalCents, 0);
+  const payoutCents = counted.reduce((sum, o) => sum + o.payoutCents, 0);
+
+  return {
+    orders: counted.length,
+    cancelled: orders.length - counted.length,
+    grossCents,
+    payoutCents,
+    // Your cut, derived rather than stored: the difference between what the
+    // food sold for and what the restaurant is owed.
+    commissionCents: grossCents - payoutCents,
+    averageCents: counted.length ? Math.round(grossCents / counted.length) : 0,
+  };
+}
+
 export async function advanceOrder(orderId) {
   const { error } = await supabase.rpc('advance_order_status', { p_order_id: orderId });
   if (error) throw error;

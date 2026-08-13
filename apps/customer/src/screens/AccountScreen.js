@@ -5,6 +5,7 @@ import { colors, browse, spacing, typography } from '@food-dash/theme';
 import { supabase } from '../lib/supabase';
 import { useSession } from '../lib/useSession';
 import { fetchAddresses, setDefaultAddress, deleteAddress } from '../lib/addresses';
+import { clearNavigationState } from '../lib/navState';
 import { useAsync } from '../lib/useAsync';
 import { Loading } from '../components/states';
 import { ScreenHeader, ConfirmSheet, LinkButton } from '../components/chrome';
@@ -92,7 +93,12 @@ export default function AccountScreen() {
         title="Sign out?"
         message="You'll need to sign in again to order."
         confirmLabel="Sign out"
-        onConfirm={() => supabase.auth.signOut()}
+        onConfirm={async () => {
+          // Drop the remembered screen first — the next person to sign in on
+          // this phone should start at Home, not on someone else's order.
+          await clearNavigationState();
+          await supabase.auth.signOut();
+        }}
         onCancel={() => setConfirmingSignOut(false)}
       />
     </View>

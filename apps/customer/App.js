@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { colors, spacing, typography } from '@food-dash/theme';
 import { useSession } from './src/lib/useSession';
 import { CartProvider } from './src/lib/cart';
+import { useNavigationState } from './src/lib/navState';
 import AuthScreen from './src/screens/AuthScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import OrdersScreen from './src/screens/OrdersScreen';
@@ -56,10 +57,13 @@ function Tabs() {
 
 export default function App() {
   const { session, loading } = useSession();
+  const nav = useNavigationState();
 
   // Held until the stored session has been read back, so a signed-in user
-  // never sees the login screen flash past on a cold start.
-  if (loading) {
+  // never sees the login screen flash past on a cold start. The saved screen
+  // position is waited on for the same reason — restoring it after the first
+  // render would show Home for a frame and then jump.
+  if (loading || !nav.ready) {
     return (
       <View style={styles.splash}>
         <StatusBar style="dark" />
@@ -72,7 +76,10 @@ export default function App() {
   // menu and the cart, and is restored from storage on a cold start.
   return (
     <CartProvider>
-      <NavigationContainer>
+      <NavigationContainer
+        initialState={nav.initialState}
+        onStateChange={nav.onStateChange}
+      >
         <StatusBar style="dark" />
         {session ? (
           // Restaurant, Cart and Tracking sit OUTSIDE the tabs on purpose:

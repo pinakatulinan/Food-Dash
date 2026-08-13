@@ -93,6 +93,30 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--whit
 .pill.muted { background: var(--divider); color: var(--text-muted); }
 .add-dish { width: auto; }
 
+/* ---- History & takings ---- */
+.history { padding-bottom: 40px; }
+.ranges { display: flex; gap: 6px; margin-bottom: 18px; }
+.range { background: #F4F4F4; border: none; cursor: pointer; font-family: inherit;
+  font-size: 12px; font-weight: 500; color: var(--text-muted);
+  padding: 7px 14px; border-radius: 999px; }
+.range.on { background: var(--coral-deep); color: var(--white); }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px; margin-bottom: 6px; }
+.tile { background: var(--white); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px; }
+/* The one number an owner actually came here for. */
+.tile.strong { background: var(--mint-pastel); border-color: var(--mint-pastel); }
+.tile-label { font-size: 11px; color: var(--text-muted); }
+.tile.strong .tile-label { color: var(--teal-text-dark); }
+.tile-value { font-size: 22px; font-weight: 500; color: var(--text-primary); }
+.tile.strong .tile-value { color: var(--teal-text-dark); }
+
+.history .menu-section h2 { display: flex; justify-content: space-between;
+  align-items: baseline; }
+.day-total { font-size: 13px; color: var(--text-muted); font-weight: 400; }
+.history-row .meta { line-height: 1.45; }
+
 /* ---- Photo picker ---- */
 .image-picker { position: relative; display: flex; align-items: center;
   justify-content: center; width: 96px; height: 96px; flex: none; cursor: pointer;

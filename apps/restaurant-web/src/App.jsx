@@ -9,6 +9,7 @@ import {
 import { enableAlerts, alertsReady, startAlerting, stopAlerting } from './lib/alerts';
 import Login from './Login';
 import Menu from './Menu';
+import History from './History';
 
 // Columns are the kitchen's lifecycle. Once an order is ready_for_pickup it
 // belongs to the rider, so this dashboard stops acting on it.
@@ -189,6 +190,12 @@ function Dashboard({ userId }) {
           >
             Menu
           </button>
+          <button
+            className={tab === 'history' ? 'tab on' : 'tab'}
+            onClick={() => setTab('history')}
+          >
+            History
+          </button>
         </nav>
       </header>
 
@@ -207,6 +214,10 @@ function Dashboard({ userId }) {
       {tab === 'menu' ? (
         <main className="main single">
           <Menu restaurant={restaurant} onRestaurantChange={setRestaurant} />
+        </main>
+      ) : tab === 'history' ? (
+        <main className="main single">
+          <History restaurant={restaurant} />
         </main>
       ) : (
       <main className="main">

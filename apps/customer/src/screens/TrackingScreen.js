@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Linking } from 'react-native';
+import { StatusPill } from '@food-dash/ui';
 import {
-  CoralHeader, HeaderStatusPill, Card, TextLink, ConfirmDialog,
-} from '@food-dash/ui';
-import { colors, spacing, typography, radius } from '@food-dash/theme';
+  ScreenHeader, Panel, LinkButton, ConfirmSheet,
+} from '../components/chrome';
+import { colors, browse, spacing, typography } from '@food-dash/theme';
 import { formatMoney } from '@food-dash/money';
 import {
   fetchOrder, subscribeToOrder, ORDER_STEPS as STEPS, stepFor, statusLabel,
@@ -74,12 +75,14 @@ export default function TrackingScreen({ route, navigation }) {
 
   const header = (children) => (
     <View style={styles.screen}>
-      <CoralHeader
-        back={{ label: 'Restaurants', onPress: () => navigation.popToTop() }}
+      <ScreenHeader
+        onBack={() => navigation.popToTop()}
         title={`Order #${orderNumber}`}
       >
-        {order ? <HeaderStatusPill label={statusLabel(order)} /> : null}
-      </CoralHeader>
+        {/* Mint stays the status colour — the one part of Style C that still
+            holds, and what keeps status from being mistaken for an action. */}
+        {order ? <StatusPill label={statusLabel(order)} /> : null}
+      </ScreenHeader>
       {children}
     </View>
   );
@@ -90,12 +93,12 @@ export default function TrackingScreen({ route, navigation }) {
   if (order.status === 'cancelled') {
     return header(
       <View style={styles.body}>
-        <Card>
+        <Panel>
           <Text style={styles.cancelled}>This order was cancelled.</Text>
           {order.cancellationReason ? (
             <Text style={styles.cancelledDetail}>{order.cancellationReason}</Text>
           ) : null}
-        </Card>
+        </Panel>
       </View>,
     );
   }
@@ -109,7 +112,7 @@ export default function TrackingScreen({ route, navigation }) {
 
   return header(
     <View style={styles.body}>
-      <Card>
+      <Panel>
         <Text style={styles.restaurant}>{order.restaurant}</Text>
         <Text style={styles.total}>{formatMoney(order.totalCents)} · cash on delivery</Text>
         {totalMoved ? (
@@ -118,22 +121,22 @@ export default function TrackingScreen({ route, navigation }) {
             {' '}{formatMoney(quotedTotalCents)} in your basket.
           </Text>
         ) : null}
-      </Card>
+      </Panel>
 
       {rider ? (
-        <Card>
+        <Panel>
           <Text style={styles.riderLabel}>Your rider</Text>
           <Text style={styles.riderName}>{rider.name}</Text>
           {rider.phone ? (
-            <TextLink
+            <LinkButton
               label={`Call ${rider.phone}`}
               onPress={() => Linking.openURL(`tel:${rider.phone}`)}
             />
           ) : null}
-        </Card>
+        </Panel>
       ) : null}
 
-      <Card>
+      <Panel>
         {STEPS.map((label, i) => (
           <View key={label} style={styles.stepRow}>
             <View
@@ -147,16 +150,16 @@ export default function TrackingScreen({ route, navigation }) {
           </View>
         ))}
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-      </Card>
+      </Panel>
 
       {/* Only before the kitchen accepts. After that it's the restaurant's
           call, because food may already be cooking — cancel_order() enforces
           the same rule, so this only decides whether to offer the button. */}
       {isCancellable(order) ? (
-        <TextLink label="Cancel order" onPress={() => setConfirmingCancel(true)} />
+        <LinkButton label="Cancel order" onPress={() => setConfirmingCancel(true)} />
       ) : null}
 
-      <ConfirmDialog
+      <ConfirmSheet
         visible={confirmingCancel}
         title="Cancel this order?"
         message="The restaurant hasn't accepted it yet, so you can still call it off."
@@ -171,11 +174,11 @@ export default function TrackingScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.white },
+  screen: { flex: 1, backgroundColor: browse.pageBg },
   body: { padding: spacing.screenPadding, gap: spacing.md },
   restaurant: {
-    fontSize: typography.body,
-    fontWeight: typography.medium,
+    fontSize: typography.subhead,
+    fontWeight: typography.semibold,
     color: colors.textPrimary,
   },
   total: { marginTop: 2, fontSize: typography.caption, color: colors.textMuted },
@@ -183,8 +186,8 @@ const styles = StyleSheet.create({
   riderLabel: { fontSize: typography.pill, color: colors.textMuted },
   riderName: {
     marginTop: 2,
-    fontSize: typography.body,
-    fontWeight: typography.medium,
+    fontSize: typography.subhead,
+    fontWeight: typography.semibold,
     color: colors.textPrimary,
   },
   stepRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 4 },

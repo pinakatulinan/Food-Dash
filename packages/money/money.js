@@ -10,7 +10,14 @@
 // Anything named *Cents is centavos. If a value isn't named that way, it
 // isn't money.
 
-/** Author a centavo amount from a peso figure. Seeds, mocks and fixtures only. */
+/**
+ * Author a centavo amount from a peso figure.
+ *
+ * Seeds and fixtures, and the one place a human types a price: the restaurant
+ * dashboard's menu editor. Both are the same boundary — a peso figure becoming
+ * storage — and routing form input through here is what stops a screen doing
+ * `Math.round(x * 100)` inline, which is the drift this module exists to stop.
+ */
 export const pesos = (amount) => Math.round(amount * 100);
 
 /**

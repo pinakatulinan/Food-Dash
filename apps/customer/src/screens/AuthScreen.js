@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import {
-  View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform,
+  View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { CoralHeader, PrimaryButton, Field, ErrorText, TextLink } from '@food-dash/ui';
-import { colors, spacing } from '@food-dash/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { colors, browse, spacing, typography } from '@food-dash/theme';
+import { ErrorText } from '@food-dash/ui';
+import { Input, Button, LinkButton } from '../components/chrome';
 import { supabase } from '../lib/supabase';
 
 // Email + password with confirmations turned off, so signup logs you straight
@@ -63,73 +65,134 @@ export default function AuthScreen() {
       style={styles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <CoralHeader
-        title={signingUp ? 'Create your account' : 'Kaon ta!'}
-        subtitle={
-          signingUp
-            ? 'So we know who to deliver to'
-            : 'Sign in to order from your neighbourhood'
-        }
-      />
       <ScrollView
-        contentContainerStyle={styles.body}
+        contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        {signingUp && (
-          <Field
-            label="Full name"
-            value={fullName}
-            onChangeText={setFullName}
-            placeholder="Juan dela Cruz"
-            autoCapitalize="words"
-            textContentType="name"
+        {/* The front door. No coral header block here — this is the one screen
+            that should feel like a brand rather than a tool, and it's the only
+            place in the app where colour fills a whole region. */}
+        <LinearGradient
+          colors={[colors.coralDeep, '#E8804F']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.hero}
+        >
+          <Text style={styles.wordmark}>Food-Dash</Text>
+          <Text style={styles.tagline}>
+            Cebu's neighbourhood kitchens, delivered.
+          </Text>
+        </LinearGradient>
+
+        <View style={styles.form}>
+          <Text style={styles.formTitle}>
+            {signingUp ? 'Create your account' : 'Welcome back'}
+          </Text>
+          <Text style={styles.formSubtitle}>
+            {signingUp
+              ? 'So we know who to deliver to.'
+              : 'Sign in to order from your neighbourhood.'}
+          </Text>
+
+          <View style={styles.fields}>
+            {signingUp && (
+              <Input
+                label="Full name"
+                value={fullName}
+                onChangeText={setFullName}
+                placeholder="Juan dela Cruz"
+                autoCapitalize="words"
+                textContentType="name"
+              />
+            )}
+            <Input
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="you@example.com"
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+              textContentType="emailAddress"
+            />
+            <Input
+              label="Password"
+              value={password}
+              onChangeText={setPassword}
+              placeholder="At least 6 characters"
+              secureTextEntry
+              autoCapitalize="none"
+              textContentType={signingUp ? 'newPassword' : 'password'}
+            />
+          </View>
+
+          <ErrorText>{error}</ErrorText>
+
+          <Button
+            label={
+              busy
+                ? signingUp ? 'Creating account…' : 'Signing in…'
+                : signingUp ? 'Create account' : 'Sign in'
+            }
+            onPress={submit}
+            disabled={busy || !email.trim() || !password}
           />
-        )}
-        <Field
-          label="Email"
-          value={email}
-          onChangeText={setEmail}
-          placeholder="you@example.com"
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="email-address"
-          textContentType="emailAddress"
-        />
-        <Field
-          label="Password"
-          value={password}
-          onChangeText={setPassword}
-          placeholder="At least 6 characters"
-          secureTextEntry
-          autoCapitalize="none"
-          textContentType={signingUp ? 'newPassword' : 'password'}
-        />
-
-        <ErrorText>{error}</ErrorText>
-
-        <PrimaryButton
-          label={
-            busy
-              ? signingUp ? 'Creating account…' : 'Signing in…'
-              : signingUp ? 'Create account' : 'Sign in'
-          }
-          onPress={submit}
-          disabled={busy || !email.trim() || !password}
-        />
-        <TextLink
-          label={
-            signingUp
-              ? 'Already have an account? Sign in'
-              : 'New here? Create an account'
-          }
-          onPress={swapMode}
-        />
+          <LinkButton
+            label={
+              signingUp
+                ? 'Already have an account? Sign in'
+                : 'New here? Create an account'
+            }
+            onPress={swapMode}
+          />
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.white },
-  body: { padding: spacing.screenPadding },
+  screen: { flex: 1, backgroundColor: browse.pageBg },
+  scroll: { flexGrow: 1 },
+  hero: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: 72,
+    paddingBottom: spacing.xl * 2,
+  },
+  wordmark: {
+    fontSize: typography.hero,
+    fontWeight: typography.bold,
+    color: colors.white,
+    letterSpacing: -0.5,
+  },
+  tagline: {
+    marginTop: spacing.xs,
+    fontSize: typography.subhead,
+    color: colors.white,
+    opacity: 0.9,
+  },
+  form: {
+    // Pulled up over the gradient so the form reads as sitting on top of the
+    // brand panel rather than starting after it.
+    marginTop: -spacing.xl,
+    paddingHorizontal: spacing.screenPadding,
+    paddingTop: spacing.xl,
+    backgroundColor: browse.pageBg,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    flex: 1,
+  },
+  formTitle: {
+    fontSize: typography.title,
+    fontWeight: typography.bold,
+    color: colors.textPrimary,
+  },
+  formSubtitle: {
+    marginTop: 2,
+    marginBottom: spacing.xl,
+    fontSize: typography.caption,
+    color: colors.textMuted,
+  },
+  fields: { marginBottom: spacing.sm },
 });

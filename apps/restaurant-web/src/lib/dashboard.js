@@ -5,7 +5,7 @@ import { supabase } from './supabase';
 export async function fetchMyRestaurant(userId) {
   const { data, error } = await supabase
     .from('restaurants')
-    .select('id, name, is_open')
+    .select('id, name, is_open, image_url, description, prep_minutes')
     .eq('owner_id', userId)
     .maybeSingle();
 
@@ -13,13 +13,126 @@ export async function fetchMyRestaurant(userId) {
   return data;
 }
 
-export async function setOpen(restaurantId, isOpen) {
-  const { error } = await supabase
+/**
+ * Updates the restaurant's own row.
+ *
+ * Only is_open, image_url, description and prep_minutes are writable — the
+ * database revokes every other column from `authenticated` (migration 009), so
+ * commission_rate and the name can't be changed from here no matter what this
+ * function is asked to send.
+ *
+ * `.select()` is not optional. Before 009 there was no UPDATE policy at all,
+ * so this matched zero rows and Postgres reported success — the toggle looked
+ * like it worked until you reloaded. Asking for the row back turns that class
+ * of silent failure into a thrown error.
+ */
+export async function updateRestaurant(restaurantId, patch) {
+  const { data, error } = await supabase
     .from('restaurants')
-    .update({ is_open: isOpen })
-    .eq('id', restaurantId);
+    .update(patch)
+    .eq('id', restaurantId)
+    .select('id, name, is_open, image_url, description, prep_minutes')
+    .single();
 
   if (error) throw error;
+  return data;
+}
+
+export async function setOpen(restaurantId, isOpen) {
+  return updateRestaurant(restaurantId, { is_open: isOpen });
+}
+
+// ============ MENU ============
+
+function toMenuItem(row) {
+  return {
+    id: row.id,
+    category: row.category,
+    name: row.name,
+    description: row.description,
+    priceCents: row.price_cents,
+    imageUrl: row.image_url,
+    isAvailable: row.is_available,
+    sortOrder: row.sort_order,
+  };
+}
+
+/** The whole menu, sold-out items included — this is the editor, not the shop. */
+export async function fetchMenu(restaurantId) {
+  const { data, error } = await supabase
+    .from('menu_items')
+    .select('id, category, name, description, price_cents, image_url, is_available, sort_order')
+    .eq('restaurant_id', restaurantId)
+    .order('category')
+    .order('sort_order');
+
+  if (error) throw error;
+  return data.map(toMenuItem);
+}
+
+/** Creates or updates one dish. `id` absent means a new one. */
+export async function saveMenuItem(restaurantId, item) {
+  const row = {
+    restaurant_id: restaurantId,
+    category: item.category?.trim() || 'Meals',
+    name: item.name.trim(),
+    description: item.description?.trim() || null,
+    price_cents: item.priceCents,
+    image_url: item.imageUrl || null,
+    is_available: item.isAvailable ?? true,
+    sort_order: item.sortOrder ?? 0,
+  };
+
+  const query = item.id
+    ? supabase.from('menu_items').update(row).eq('id', item.id)
+    : supabase.from('menu_items').insert(row);
+
+  const { data, error } = await query.select(
+    'id, category, name, description, price_cents, image_url, is_available, sort_order',
+  ).single();
+
+  if (error) throw error;
+  return toMenuItem(data);
+}
+
+/**
+ * Taking a dish off the menu hides it rather than deleting it.
+ *
+ * order_items snapshots the name and price at order time, so an old order
+ * survives a deletion — but menu_items.id is still referenced, and a dish that
+ * comes back next week should be the same row rather than a new one. Hiding is
+ * also reversible by the person who did it, which deleting is not.
+ */
+export async function setItemAvailable(itemId, isAvailable) {
+  const { error } = await supabase
+    .from('menu_items')
+    .update({ is_available: isAvailable })
+    .eq('id', itemId);
+
+  if (error) throw error;
+}
+
+/**
+ * Uploads a photo and returns its public URL.
+ *
+ * Stored under <restaurant_id>/... because the storage policies in 009 check
+ * the first path segment — that folder IS the permission boundary, so the
+ * prefix is not cosmetic.
+ */
+export async function uploadImage(restaurantId, file) {
+  const extension = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  // Timestamped rather than named after the dish: a rename shouldn't orphan
+  // the photo, and two dishes called "Special" shouldn't collide.
+  const path = `${restaurantId}/${Date.now()}.${extension}`;
+
+  const { error } = await supabase.storage
+    .from('menu-images')
+    .upload(path, file, { cacheControl: '3600', upsert: false });
+
+  if (error) throw error;
+
+  const { data } = supabase.storage.from('menu-images').getPublicUrl(path);
+  return data.publicUrl;
 }
 
 function toOrder(row) {

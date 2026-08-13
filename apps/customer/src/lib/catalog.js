@@ -16,9 +16,14 @@ function toRestaurant(row) {
     name: row.name,
     description: row.description,
     isOpen: row.is_open,
+    imageUrl: row.image_url,
     deliveryFeeCents: row.delivery_fee_cents,
     etaMin: row.prep_minutes + TRAVEL_MIN_MINUTES,
     etaMax: row.prep_minutes + TRAVEL_MAX_MINUTES,
+    // Which kinds of food this place sells, from its own menu. Powers the
+    // category rail on Home — there is no cuisine field on restaurants, and
+    // the menu is a more honest answer than one anyway.
+    categories: [...new Set((row.menu_items ?? []).map((m) => m.category))],
   };
 }
 
@@ -28,14 +33,26 @@ function toMenuItem(row) {
     category: row.category,
     name: row.name,
     description: row.description,
+    imageUrl: row.image_url,
     priceCents: row.price_cents,
   };
 }
 
+/**
+ * Every restaurant, each carrying the categories it actually serves.
+ *
+ * The categories come back embedded rather than as a second round trip: the
+ * pilot is a handful of restaurants in one barangay, so one query with a small
+ * nested select beats two queries and a client-side join. Revisit if the list
+ * ever grows past a page.
+ */
 export async function fetchRestaurants() {
   const { data, error } = await supabase
     .from('restaurants')
-    .select('id, name, description, is_open, prep_minutes, delivery_fee_cents')
+    .select(
+      'id, name, description, is_open, image_url, prep_minutes, ' +
+      'delivery_fee_cents, menu_items(category)',
+    )
     .order('is_open', { ascending: false })
     .order('name');
 
@@ -46,7 +63,7 @@ export async function fetchRestaurants() {
 export async function fetchMenu(restaurantId) {
   const { data, error } = await supabase
     .from('menu_items')
-    .select('id, category, name, description, price_cents, sort_order')
+    .select('id, category, name, description, image_url, price_cents, sort_order')
     .eq('restaurant_id', restaurantId)
     .eq('is_available', true)
     .order('sort_order');

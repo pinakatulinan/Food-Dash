@@ -76,7 +76,8 @@ export default function HomeScreen({ navigation }) {
       {loading ? (
         <Loading />
       ) : error ? (
-        <EmptyState title="Couldn't load restaurants" detail={error} />
+        <EmptyState title="Couldn't load restaurants"
+          icon="cloud-offline-outline" detail={error} />
       ) : (
         <FlatList
           data={visible}
@@ -91,6 +92,7 @@ export default function HomeScreen({ navigation }) {
           ListEmptyComponent={
             <EmptyState
               title="Nothing matches"
+              icon="search-outline"
               detail={
                 query
                   ? `No restaurant or dish for "${query.trim()}".`

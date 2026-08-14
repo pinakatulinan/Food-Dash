@@ -5,6 +5,7 @@
   "type": "module",
   "main": "ui.js",
   "peerDependencies": {
+    "@expo/vector-icons": "*",
     "react": "*",
     "react-native": "*"
   }

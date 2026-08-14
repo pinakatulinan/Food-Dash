@@ -7,9 +7,11 @@ import {
   subscribeToOrders,
 } from './lib/dashboard';
 import { enableAlerts, alertsReady, startAlerting, stopAlerting } from './lib/alerts';
+import { isAdmin } from './lib/admin';
 import Login from './Login';
 import Menu from './Menu';
 import History from './History';
+import Admin from './Admin';
 
 // Columns are the kitchen's lifecycle. Once an order is ready_for_pickup it
 // belongs to the rider, so this dashboard stops acting on it.
@@ -42,6 +44,11 @@ function Dashboard({ userId }) {
   const [error, setError] = useState(null);
   const [busyId, setBusyId] = useState(null);
   const [tab, setTab] = useState('orders');
+  // Asked of the database rather than inferred from anything the client holds.
+  // Hiding the tab is only tidiness — every admin function checks the caller
+  // again, so a forged `true` here would still be refused.
+  const [admin, setAdmin] = useState(false);
+  const [adminChecked, setAdminChecked] = useState(false);
   const [alertsOn, setAlertsOn] = useState(alertsReady());
   // Which pending orders we've already sounded for, so a refetch caused by a
   // rider claiming some other order doesn't set the alarm off again.
@@ -106,6 +113,14 @@ function Dashboard({ userId }) {
   // Stop the timer if the dashboard is closed mid-alarm.
   useEffect(() => stopAlerting, []);
 
+  useEffect(() => {
+    let active = true;
+    isAdmin()
+      .then((yes) => { if (active) setAdmin(yes); })
+      .finally(() => { if (active) setAdminChecked(true); });
+    return () => { active = false; };
+  }, [userId]);
+
   const turnOnAlerts = async () => {
     const { sound, notifications } = await enableAlerts();
     setAlertsOn(sound);
@@ -140,7 +155,33 @@ function Dashboard({ userId }) {
     }
   };
 
-  if (!ready) return <main className="login"><p className="hint">Loading…</p></main>;
+  // Waits for the admin answer too, or an admin with no restaurant would see
+  // the "no restaurant linked" dead end flash before being corrected.
+  if (!ready || !adminChecked) {
+    return <main className="login"><p className="hint">Loading…</p></main>;
+  }
+
+  // An admin normally owns no restaurant — running the platform and running a
+  // kitchen are different jobs. Without this they'd hit the "no restaurant"
+  // dead end below and never reach the admin screen at all.
+  if (!restaurant && admin) {
+    return (
+      <>
+        <header className="header">
+          <div className="header-row">
+            <div>
+              <h1>Food-Dash</h1>
+              <p>Platform admin</p>
+            </div>
+            <button className="link" onClick={() => supabase.auth.signOut()}>Sign out</button>
+          </div>
+        </header>
+        <main className="main single">
+          <Admin />
+        </main>
+      </>
+    );
+  }
 
   if (!restaurant) {
     return (
@@ -174,7 +215,10 @@ function Dashboard({ userId }) {
           </div>
           <button className="link" onClick={() => supabase.auth.signOut()}>Sign out</button>
         </div>
-        <button className="toggle" onClick={toggleOpen}>
+        <button
+          className={restaurant.is_open ? 'toggle' : 'toggle off'}
+          onClick={toggleOpen}
+        >
           {restaurant.is_open ? 'Open — accepting orders' : 'Closed — click to open'}
         </button>
         <nav className="tabs">
@@ -196,6 +240,14 @@ function Dashboard({ userId }) {
           >
             History
           </button>
+          {admin && (
+            <button
+              className={tab === 'admin' ? 'tab on' : 'tab'}
+              onClick={() => setTab('admin')}
+            >
+              Admin
+            </button>
+          )}
         </nav>
       </header>
 
@@ -219,15 +271,25 @@ function Dashboard({ userId }) {
         <main className="main single">
           <History restaurant={restaurant} />
         </main>
+      ) : tab === 'admin' ? (
+        <main className="main single">
+          <Admin />
+        </main>
       ) : (
       <main className="main">
         {COLUMNS.map(({ status, label, cta }) => {
           const inColumn = orders.filter((o) => o.status === status);
+          const urgent = status === 'pending' && inColumn.length > 0;
           return (
-            <section className="col" key={status}>
-              <h2>{label} {inColumn.length > 0 && `(${inColumn.length})`}</h2>
+            <section className={urgent ? 'col urgent' : 'col'} key={status}>
+              <h2>
+                {label}
+                {inColumn.length > 0 && (
+                  <span className="col-count">{inColumn.length}</span>
+                )}
+              </h2>
               {inColumn.map((o) => (
-                <article className="card" key={o.id}>
+                <article className={status === 'pending' ? 'card new' : 'card'} key={o.id}>
                   <div className="row">
                     <span className="num">Order #{o.number}</span>
                     <span className="pill">{formatMoney(o.subtotalCents)}</span>

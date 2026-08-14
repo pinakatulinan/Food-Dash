@@ -1,130 +1,290 @@
-/* Style C tokens for the web dashboard */
+/* Food-Dash dashboard.
+ *
+ * Same design language as the two mobile apps: white chrome, type doing the
+ * work a coloured header block used to do, coral for actions only, mint for
+ * status only. Tokens are copied from packages/theme rather than imported,
+ * because this is a Vite app and that package is JS for React Native — if a
+ * colour changes there, change it here too.
+ *
+ * The density is different on purpose. This is a laptop on a counter, read
+ * across a room by someone with their hands full, so rows are tighter and
+ * text is larger than a phone would use. */
+
 :root {
-  --coral-pastel: #FFD9C9;
+  /* Brand */
   --coral-deep: #D85A30;
-  --coral-text-dark: #7A3A1F;
-  --coral-text-mid: #8A4A2F;
+  --coral-soft: #FDF0EA;
   --mint-pastel: #CFF0E8;
   --teal-text-dark: #1F5F4F;
+
+  /* Neutrals */
   --white: #FFFFFF;
+  --page: #FFFFFF;
+  --section: #FAFAFA;
+  --chip: #F4F4F4;
   --border: #E2E2E2;
   --divider: #EEEEEE;
   --text-primary: #1A1A1A;
+  --text-secondary: #4A4A4A;
   --text-muted: #8A8A8A;
+
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
 }
+
 * { box-sizing: border-box; margin: 0; }
-body { font-family: system-ui, -apple-system, sans-serif; background: var(--white); color: var(--text-primary); }
-.header { background: var(--coral-pastel); padding: 20px 24px; }
-.header h1 { font-size: 20px; font-weight: 500; color: var(--coral-text-dark); }
-.header p { font-size: 13px; color: var(--coral-text-mid); margin-top: 2px; }
-.toggle { margin-top: 10px; display: inline-flex; align-items: center; gap: 8px;
-  background: var(--white); border-radius: 999px; padding: 5px 14px;
-  font-size: 12px; font-weight: 500; color: var(--teal-text-dark); cursor: pointer; border: none; }
-.main { padding: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; max-width: 1100px; }
-.col h2 { font-size: 15px; font-weight: 500; margin-bottom: 10px; }
-.card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
-.card .row { display: flex; justify-content: space-between; align-items: center; }
-.card .num { font-weight: 500; font-size: 14px; }
-.card .meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-.pill { background: var(--mint-pastel); color: var(--teal-text-dark); font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 999px; }
-.cta { background: var(--coral-deep); color: var(--white); border: none; border-radius: 8px;
-  padding: 9px 14px; font-size: 13px; font-weight: 500; cursor: pointer; margin-top: 10px; width: 100%; }
-.cta.secondary { background: var(--white); color: var(--coral-deep); border: 1px solid var(--border); }
-.items { border-top: 1px solid var(--divider); margin-top: 8px; padding-top: 8px; font-size: 13px; }
-.items div { display: flex; justify-content: space-between; padding: 2px 0; }
 
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--page);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Header ----
+   No coloured block. The restaurant's name is the largest thing on the page,
+   the same way the mobile apps announce a screen with type. */
+.header {
+  padding: 22px 24px 0;
+  border-bottom: 1px solid var(--divider);
+}
+.header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.2px; }
+.header p { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
 .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
-.link { background: none; border: none; cursor: pointer; font-size: 13px;
-  font-weight: 500; color: var(--coral-text-mid); padding: 0; }
 
-.login { padding: 24px; max-width: 380px; }
-.field { display: block; margin-bottom: 12px; }
-.field span { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
-.field input { width: 100%; padding: 10px 12px; font-size: 14px; font-family: inherit;
-  color: var(--text-primary); background: var(--white);
-  border: 1px solid var(--border); border-radius: 8px; }
+/* The open/closed switch. Mint when trading, quiet grey when not — status
+   colours, never coral, because this is a state and not an action. */
+.toggle {
+  margin-top: 12px;
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--mint-pastel); color: var(--teal-text-dark);
+  border: none; border-radius: 999px; padding: 7px 16px;
+  font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.toggle.off { background: var(--chip); color: var(--text-muted); }
 
-/* Deep coral as text — the only alerting tone in the palette, kept as text so
-   it never competes with the single coral CTA. */
-.error { font-size: 13px; color: var(--coral-deep); margin-top: 8px; }
-.error.banner { padding: 12px 24px 0; }
-.hint { font-size: 12px; color: var(--text-muted); margin-top: 10px; }
+.link {
+  background: none; border: none; cursor: pointer; font-family: inherit;
+  font-size: 13px; font-weight: 600; color: var(--coral-deep); padding: 0;
+}
 
 /* ---- Tabs ---- */
-.tabs { display: flex; gap: 4px; margin-top: 14px; margin-bottom: -20px; }
-.tab { background: none; border: none; cursor: pointer; font-family: inherit;
-  font-size: 13px; font-weight: 500; color: var(--coral-text-mid);
-  padding: 8px 14px; border-radius: 8px 8px 0 0; }
-.tab.on { background: var(--white); color: var(--text-primary); }
+.tabs { display: flex; gap: 2px; margin-top: 16px; }
+.tab {
+  background: none; border: none; border-bottom: 2px solid transparent;
+  cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600;
+  color: var(--text-muted); padding: 10px 14px;
+}
+.tab:hover { color: var(--text-primary); }
+.tab.on { color: var(--text-primary); border-bottom-color: var(--coral-deep); }
 
-/* ---- New-order alert bar ----
-   Coral as a filled surface is normally reserved for the CTA, but this is the
-   one thing on the page that must survive being ignored. */
-.alert-bar { display: flex; align-items: center; justify-content: space-between;
-  gap: 16px; flex-wrap: wrap; background: var(--coral-deep); color: var(--white);
-  padding: 10px 24px; font-size: 13px; font-weight: 500; }
-.alert-bar .cta { margin-top: 0; width: auto; background: var(--white);
-  color: var(--coral-deep); }
+/* ---- New-order alert ----
+   Coral as a filled surface is otherwise reserved for the CTA. This earns it:
+   it is the one thing on the page that must survive being ignored. */
+.alert-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+  background: var(--coral-deep); color: var(--white);
+  padding: 12px 24px; font-size: 14px; font-weight: 600;
+}
+.alert-bar .cta { margin-top: 0; width: auto; background: var(--white); color: var(--coral-deep); }
 
-.cta.compact { width: auto; padding: 7px 12px; margin-top: 0; }
-.main.single { display: block; max-width: 780px; }
+/* ---- Layout ---- */
+.main {
+  padding: 24px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px; max-width: 1240px; align-items: start;
+}
+.main.single { display: block; max-width: 820px; }
+
+/* ---- Kanban ----
+   Columns stay: orders move left to right and staff can see the whole board
+   at a glance, which a single queue cannot do. */
+.col h2 {
+  font-size: 13px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.6px; color: var(--text-muted);
+  margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+}
+.col-count {
+  background: var(--chip); color: var(--text-secondary);
+  border-radius: 999px; padding: 1px 8px; font-size: 12px;
+  font-weight: 700; letter-spacing: 0;
+}
+/* Orders nobody has accepted yet are the only urgent thing here. */
+.col.urgent h2 { color: var(--coral-deep); }
+.col.urgent .col-count { background: var(--coral-deep); color: var(--white); }
+
+.card {
+  background: var(--section); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px;
+}
+.card.new { background: var(--coral-soft); border-color: #F3C9B6; }
+.card .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.card .num { font-weight: 700; font-size: 15px; }
+.card .meta { font-size: 13px; color: var(--text-muted); margin-top: 5px; line-height: 1.45; }
+
+.pill {
+  background: var(--mint-pastel); color: var(--teal-text-dark);
+  font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px;
+  white-space: nowrap;
+}
+.pill.muted { background: var(--chip); color: var(--text-muted); }
+
+.items {
+  border-top: 1px solid var(--divider); margin-top: 12px; padding-top: 10px;
+  font-size: 14px;
+}
+.items div { display: flex; justify-content: space-between; padding: 3px 0; }
+
+/* ---- Buttons ---- */
+.cta {
+  background: var(--coral-deep); color: var(--white);
+  border: none; border-radius: var(--radius-sm);
+  padding: 11px 16px; font-family: inherit; font-size: 14px; font-weight: 600;
+  cursor: pointer; margin-top: 12px; width: 100%;
+}
+.cta:hover { filter: brightness(1.05); }
+.cta:disabled { opacity: 0.45; cursor: default; }
+.cta.secondary {
+  background: transparent; color: var(--text-secondary); border: 1px solid var(--border);
+}
+.cta.compact { width: auto; padding: 8px 14px; margin-top: 0; }
+
+/* ---- Forms ---- */
+.field { display: block; margin-bottom: 14px; }
+.field span { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
+.field input, .field select {
+  width: 100%; padding: 11px 12px; font-size: 14px; font-family: inherit;
+  color: var(--text-primary); background: var(--white);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.field input:focus, .field select:focus {
+  outline: none; border-color: var(--coral-deep);
+}
+
+.login { padding: 40px 24px; max-width: 400px; margin: 0 auto; }
+.login h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+
+/* Coral as text — the only alerting tone in the palette, kept as text so it
+   never competes with the single coral CTA. */
+.error { font-size: 13px; color: var(--coral-deep); margin-top: 8px; }
+.error.banner { padding: 12px 24px 0; }
+.hint { font-size: 13px; color: var(--text-muted); margin-top: 10px; line-height: 1.5; }
+
+/* ---- Section headings, shared by Menu / History / Admin ---- */
+.menu-section { margin-bottom: 30px; }
+.menu-section h2, .menu h2, .admin h2, .history h2 {
+  font-size: 17px; font-weight: 700; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 10px;
+}
 
 /* ---- Menu editor ---- */
-.menu { padding-bottom: 40px; }
-.menu h2 { font-size: 15px; font-weight: 500; margin-bottom: 10px; }
-.menu-banner { display: flex; gap: 16px; align-items: flex-start;
-  padding-bottom: 20px; border-bottom: 1px solid var(--divider); margin-bottom: 20px; }
-.menu-banner .hint { margin-top: 4px; max-width: 380px; }
-.menu-section { margin-bottom: 28px; }
+.menu { padding-bottom: 48px; }
+.menu-banner {
+  display: flex; gap: 18px; align-items: flex-start;
+  padding-bottom: 22px; border-bottom: 1px solid var(--divider); margin-bottom: 24px;
+}
+.menu-banner .hint { margin-top: 4px; max-width: 400px; }
 
-.dish { display: flex; gap: 14px; background: var(--white);
-  border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
-/* Sold out stays visible but obviously inactive — it's still on your menu,
-   just not for sale today. */
-.dish-off { opacity: 0.6; }
+.dish {
+  display: flex; gap: 16px; background: var(--white);
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 16px; margin-bottom: 12px;
+}
+/* Sold out stays visible but obviously inactive — still on the menu, just not
+   for sale today. */
+.dish-off { opacity: 0.55; }
 .dish-fields { flex: 1; min-width: 0; }
-.dish-line { display: flex; gap: 10px; flex-wrap: wrap; }
-.dish-line .field { margin-bottom: 10px; }
+.dish-line { display: flex; gap: 12px; flex-wrap: wrap; }
+.dish-line .field { margin-bottom: 12px; }
 .field.grow { flex: 1 1 180px; }
-.field.price { width: 110px; }
-.dish-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 4px; }
+.field.price { width: 120px; }
+.dish-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 4px; }
 .dish-actions .hint { margin-top: 0; }
 .price-hint { margin-left: auto; }
-.pill.muted { background: var(--divider); color: var(--text-muted); }
 .add-dish { width: auto; }
 
-/* ---- History & takings ---- */
-.history { padding-bottom: 40px; }
-.ranges { display: flex; gap: 6px; margin-bottom: 18px; }
-.range { background: #F4F4F4; border: none; cursor: pointer; font-family: inherit;
-  font-size: 12px; font-weight: 500; color: var(--text-muted);
-  padding: 7px 14px; border-radius: 999px; }
-.range.on { background: var(--coral-deep); color: var(--white); }
-
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 10px; margin-bottom: 6px; }
-.tile { background: var(--white); border: 1px solid var(--border);
-  border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px; }
-/* The one number an owner actually came here for. */
-.tile.strong { background: var(--mint-pastel); border-color: var(--mint-pastel); }
-.tile-label { font-size: 11px; color: var(--text-muted); }
-.tile.strong .tile-label { color: var(--teal-text-dark); }
-.tile-value { font-size: 22px; font-weight: 500; color: var(--text-primary); }
-.tile.strong .tile-value { color: var(--teal-text-dark); }
-
-.history .menu-section h2 { display: flex; justify-content: space-between;
-  align-items: baseline; }
-.day-total { font-size: 13px; color: var(--text-muted); font-weight: 400; }
-.history-row .meta { line-height: 1.45; }
-
 /* ---- Photo picker ---- */
-.image-picker { position: relative; display: flex; align-items: center;
-  justify-content: center; width: 96px; height: 96px; flex: none; cursor: pointer;
-  background: #F7F2EF; border: 1px dashed var(--border); border-radius: 10px;
-  overflow: hidden; font-size: 12px; color: var(--text-muted); text-align: center; }
-.image-picker.wide { width: 200px; height: 112px; }
+.image-picker {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  width: 104px; height: 104px; flex: none; cursor: pointer;
+  background: #F7F2EF; border: 1px dashed var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  font-size: 12px; color: var(--text-muted); text-align: center;
+}
+.image-picker:hover { border-color: var(--coral-deep); color: var(--coral-deep); }
+.image-picker.wide { width: 210px; height: 118px; }
 .image-picker input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .image-picker img { width: 100%; height: 100%; object-fit: cover; }
-.image-picker .uploading { position: absolute; inset: 0; display: flex;
-  align-items: center; justify-content: center; background: rgba(255,255,255,0.85);
-  font-weight: 500; color: var(--text-primary); }
+.image-picker .uploading {
+  position: absolute; inset: 0; display: flex; align-items: center;
+  justify-content: center; background: rgba(255,255,255,0.9);
+  font-weight: 600; color: var(--text-primary);
+}
+
+/* ---- Opening hours ---- */
+.hours-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; padding: 12px 16px;
+}
+.hours-day {
+  display: flex; align-items: center; gap: 10px; font-size: 14px;
+  font-weight: 600; cursor: pointer; min-width: 140px;
+}
+.hours-times { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.hours-times input[type="time"] {
+  padding: 8px 10px; font-size: 14px; font-family: inherit;
+  color: var(--text-primary); background: var(--white);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.hours-row .meta { margin-top: 0; }
+
+/* ---- History & takings ---- */
+.history { padding-bottom: 48px; }
+.ranges { display: flex; gap: 8px; margin-bottom: 22px; }
+.range {
+  background: var(--chip); border: none; cursor: pointer; font-family: inherit;
+  font-size: 13px; font-weight: 600; color: var(--text-muted);
+  padding: 9px 16px; border-radius: 999px;
+}
+.range.on { background: var(--coral-deep); color: var(--white); }
+
+.tiles {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px; margin-bottom: 8px;
+}
+.tile {
+  background: var(--section); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px;
+  display: flex; flex-direction: column; gap: 5px;
+}
+/* The one number an owner actually came here for. */
+.tile.strong { background: var(--mint-pastel); border-color: var(--mint-pastel); }
+.tile-label { font-size: 12px; color: var(--text-muted); }
+.tile.strong .tile-label { color: var(--teal-text-dark); }
+.tile-value { font-size: 26px; font-weight: 700; letter-spacing: -0.3px; }
+.tile.strong .tile-value { color: var(--teal-text-dark); }
+
+.day-total { font-size: 14px; color: var(--text-muted); font-weight: 600; margin-left: auto; }
+.history-row .meta { line-height: 1.5; }
+
+/* ---- Admin ---- */
+.admin { padding-bottom: 48px; }
+.admin-row { display: grid; grid-template-columns: 1.4fr 1fr auto; gap: 16px; align-items: center; }
+.admin-who { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.admin-who .meta { margin-top: 0; }
+.admin-state { display: flex; flex-direction: column; gap: 5px; align-items: flex-start; }
+.admin-state .meta { margin-top: 0; }
+.admin-actions { display: flex; gap: 10px; align-items: center; }
+/* Linking an owner needs a text field, which doesn't fit the three-column
+   row — so that one spans instead. */
+.admin-actions.wide { grid-column: 1 / -1; flex-wrap: wrap; align-items: flex-end; }
+.admin-actions.wide .field { margin-bottom: 0; min-width: 240px; }
+.admin-actions.wide .hint { margin-top: 0; width: 100%; }
+
+@media (max-width: 640px) {
+  .admin-row { grid-template-columns: 1fr; }
+  .main { padding: 16px; }
+  .header { padding: 18px 16px 0; }
+}

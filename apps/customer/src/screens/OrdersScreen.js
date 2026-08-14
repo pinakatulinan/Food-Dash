@@ -1,12 +1,11 @@
 import React from 'react';
 import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
-import { StatusPill } from '@food-dash/ui';
+import { StatusPill, ScreenHeader, Panel } from '@food-dash/ui';
 import { colors, browse, spacing, typography } from '@food-dash/theme';
 import { formatMoney } from '@food-dash/money';
 import { fetchMyOrders, statusLabel, isFinished } from '../lib/orders';
 import { useAsync } from '../lib/useAsync';
 import { Loading, EmptyState } from '../components/states';
-import { ScreenHeader, Panel } from '../components/chrome';
 import { FoodImage } from '../components/browse';
 
 function formatDate(iso) {
@@ -25,7 +24,8 @@ export default function OrdersScreen({ navigation }) {
       {loading ? (
         <Loading />
       ) : error ? (
-        <EmptyState title="Couldn't load your orders" detail={error} />
+        <EmptyState title="Couldn't load your orders"
+          icon="cloud-offline-outline" detail={error} />
       ) : (
         <FlatList
           data={orders}
@@ -35,6 +35,7 @@ export default function OrdersScreen({ navigation }) {
           ListEmptyComponent={
             <EmptyState
               title="No orders yet"
+              icon="receipt-outline"
               detail="Anything you order will show up here."
             />
           }

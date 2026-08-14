@@ -2,13 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Pressable,
 } from 'react-native';
-import { StatusPill, ErrorText, QtyStepper, SelectRow } from '@food-dash/ui';
-import { ScreenHeader, Button, Input } from '../components/chrome';
+import {
+  StatusPill, ErrorText, QtyStepper, SelectRow, ScreenHeader, Button, Input,
+} from '@food-dash/ui';
 import { colors, browse, spacing, radius, typography } from '@food-dash/theme';
 import { formatMoney } from '@food-dash/money';
 import { placeOrder } from '../lib/orders';
 import { fetchMenu } from '../lib/catalog';
 import { fetchAddresses, createAddress } from '../lib/addresses';
+import { fetchMyProfile, updateMyPhone, isUsablePhone } from '../lib/profile';
 import { useCart } from '../lib/cart';
 import { useAsync } from '../lib/useAsync';
 import { Loading, EmptyState } from '../components/states';
@@ -33,6 +35,14 @@ export default function CartScreen({ navigation }) {
 
   const addressState = useAsync(fetchAddresses);
   const addresses = addressState.data;
+
+  // Accounts created before signup asked for a number have none, and those are
+  // exactly the accounts in the pilot. Rather than leave them permanently
+  // uncontactable, the number is collected here — at the one moment it's
+  // obviously relevant, because a rider is about to come to your house.
+  const profileState = useAsync(fetchMyProfile);
+  const [phone, setPhone] = useState('');
+  const needsPhone = profileState.data != null && !isUsablePhone(profileState.data.phone);
 
   // Prices move, and a persisted basket can be days old. Re-price against the
   // live menu the moment the basket opens, so what's on screen is what the
@@ -68,6 +78,13 @@ export default function CartScreen({ navigation }) {
     setPlacing(true);
     setError(null);
     try {
+      // Saved before the order, and awaited unlike the address below: an order
+      // that exists with no way to reach the customer is the thing this is
+      // here to prevent, so it must not be best-effort.
+      if (needsPhone) {
+        await updateMyPhone(profileState.data.id, phone);
+      }
+
       if (selectedId === NEW_ADDRESS && saveForNextTime) {
         // Saving is a convenience, not part of ordering. If it fails the order
         // should still go through, so it is deliberately not awaited into the
@@ -121,12 +138,15 @@ export default function CartScreen({ navigation }) {
     return header(
       <EmptyState
         title="Your basket is empty"
+        icon="basket-outline"
         detail="Add something from a restaurant menu and it'll show up here."
       />,
     );
   }
 
-  if (menuState.loading || addressState.loading) return header(<Loading />);
+  if (menuState.loading || addressState.loading || profileState.loading) {
+    return header(<Loading />);
+  }
 
   return (
     <KeyboardAvoidingView
@@ -167,6 +187,22 @@ export default function CartScreen({ navigation }) {
           <Row label="Delivery fee" value={formatMoney(deliveryFeeCents)} muted />
           <Row label="Total" value={formatMoney(totalCents)} bold />
         </View>
+
+        {needsPhone ? (
+          <View style={styles.phoneBlock}>
+            <Text style={styles.sectionLabel}>Your mobile number</Text>
+            <Text style={styles.phoneHint}>
+              Your rider will call this if they can't find your address.
+            </Text>
+            <Input
+              value={phone}
+              onChangeText={setPhone}
+              placeholder="0917 123 4567"
+              keyboardType="phone-pad"
+              textContentType="telephoneNumber"
+            />
+          </View>
+        ) : null}
 
         <Text style={styles.sectionLabel}>Deliver to</Text>
         {addressState.error ? <ErrorText>{addressState.error}</ErrorText> : null}
@@ -229,7 +265,10 @@ export default function CartScreen({ navigation }) {
         <Button
           label={placing ? 'Placing order…' : 'Place order'}
           onPress={submit}
-          disabled={placing || !addressText.trim() || isEmpty}
+          disabled={
+            placing || !addressText.trim() || isEmpty ||
+            (needsPhone && !isUsablePhone(phone))
+          }
         />
       </ScrollView>
     </KeyboardAvoidingView>
@@ -294,6 +333,12 @@ const styles = StyleSheet.create({
     fontWeight: typography.semibold,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
+  },
+  phoneBlock: { marginBottom: spacing.lg },
+  phoneHint: {
+    marginBottom: spacing.sm,
+    fontSize: typography.caption,
+    color: colors.textMuted,
   },
   newAddress: { marginTop: spacing.md },
   notes: { marginTop: spacing.md },

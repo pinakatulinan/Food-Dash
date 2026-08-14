@@ -3,6 +3,7 @@ import { formatMoney, pesos } from '@food-dash/money';
 import {
   fetchMenu, saveMenuItem, setItemAvailable, uploadImage, updateRestaurant,
 } from './lib/dashboard';
+import Hours from './Hours';
 
 // The menu editor.
 //
@@ -83,6 +84,8 @@ export default function Menu({ restaurant, onRestaurantChange }) {
           </p>
         </div>
       </section>
+
+      <Hours restaurantId={restaurant.id} />
 
       {categories.map(([category, dishes]) => (
         <section className="menu-section" key={category}>

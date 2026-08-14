@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import {
   View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { CoralHeader, PrimaryButton, Field, ErrorText, TextLink } from '@food-dash/ui';
-import { colors, spacing } from '@food-dash/theme';
+import { ScreenHeader, Button, Input, ErrorText, LinkButton } from '@food-dash/ui';
+import { colors, browse, spacing } from '@food-dash/theme';
 import { supabase } from '../lib/supabase';
 
 // Rider accounts are separate from customer accounts — same person, two
@@ -50,7 +50,8 @@ export default function AuthScreen() {
       style={styles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <CoralHeader
+      <ScreenHeader
+        size="large"
         title={signingUp ? 'Ride with Food-Dash' : 'Food-Dash Rider'}
         subtitle={
           signingUp
@@ -63,7 +64,7 @@ export default function AuthScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {signingUp && (
-          <Field
+          <Input
             label="Full name"
             value={fullName}
             onChangeText={setFullName}
@@ -71,7 +72,7 @@ export default function AuthScreen() {
             autoCapitalize="words"
           />
         )}
-        <Field
+        <Input
           label="Email"
           value={email}
           onChangeText={setEmail}
@@ -80,7 +81,7 @@ export default function AuthScreen() {
           autoCorrect={false}
           keyboardType="email-address"
         />
-        <Field
+        <Input
           label="Password"
           value={password}
           onChangeText={setPassword}
@@ -91,12 +92,13 @@ export default function AuthScreen() {
 
         <ErrorText>{error}</ErrorText>
 
-        <PrimaryButton
+        <Button
+          size="large"
           label={busy ? 'Please wait…' : signingUp ? 'Apply to ride' : 'Sign in'}
           onPress={submit}
           disabled={busy || !email.trim() || !password}
         />
-        <TextLink
+        <LinkButton
           label={signingUp ? 'Already applied? Sign in' : 'New rider? Apply here'}
           onPress={() => { setSigningUp(!signingUp); setError(null); }}
         />
@@ -106,6 +108,6 @@ export default function AuthScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.white },
+  screen: { flex: 1, backgroundColor: browse.pageBg },
   body: { padding: spacing.screenPadding },
 });

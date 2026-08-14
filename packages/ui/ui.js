@@ -1,90 +1,134 @@
-// Style C building blocks — every screen in both Expo apps composes these.
-// Rules: coral header on every screen, ONE deep-coral CTA per screen,
-// mint = status only, white pill for status shown on the coral header.
+// The Food-Dash design system, shared by the customer and rider apps.
+//
+// One language, two densities. The colours, type scale, radii and component
+// vocabulary are identical everywhere, so the two apps read as one product.
+// What differs is size: a customer taps with a thumb while sitting down, a
+// rider taps with a gloved hand at the side of a road. Anything a rider has to
+// hit takes `size="large"`.
+//
+// This replaced Style C — a pastel-coral header block on every screen. That
+// system made every screen shout equally, which left nothing for the thing
+// that actually mattered on each one. Headers are now type, and colour is
+// spent on exactly two jobs: coral means an action, mint means status.
 import React from 'react';
-import { View, Text, TextInput, Pressable, Modal, StyleSheet } from 'react-native';
-import { colors, semantic, spacing, radius, typography } from '@food-dash/theme';
+import {
+  View, Text, TextInput, Pressable, Modal, ScrollView, StyleSheet,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, browse, spacing, radius, typography } from '@food-dash/theme';
 
-// `action` is a quiet secondary control in the top-right — account actions,
-// not tasks. Styled as coral text rather than a button so it never reads as
-// the screen's CTA.
-export function CoralHeader({ title, subtitle, back, action, actions, children }) {
-  // `actions` for several, `action` for one — both land in the same row.
-  const actionList = actions ?? (action ? [action] : []);
+// Tap targets. 44 is Apple's documented minimum; 56 is what a rider gets,
+// because the alternative is pulling over to aim.
+const TARGET = { default: 44, large: 56 };
+
+/**
+ * The top of every screen.
+ *
+ * `children` holds a status pill or a toggle row — anything that belongs to
+ * the screen's identity rather than its content.
+ */
+export function ScreenHeader({
+  title, subtitle, onBack, right, children, size = 'default',
+}) {
+  const large = size === 'large';
   return (
     <View style={styles.header}>
-      {back ? (
-        <Pressable
-          onPress={back.onPress}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          style={({ pressed }) => [styles.headerBack, pressed && { opacity: 0.6 }]}
-        >
-          <Text style={styles.headerBackText}>← {back.label ?? 'Back'}</Text>
-        </Pressable>
-      ) : null}
-      <View style={styles.headerTop}>
-        <Text style={styles.headerTitle}>{title}</Text>
-        <View style={styles.headerActions}>
-          {actionList.map((a) => (
-            <Pressable
-              key={a.label}
-              onPress={a.onPress}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              style={({ pressed }) => pressed && { opacity: 0.6 }}
-            >
-              <Text style={styles.headerAction}>{a.label}</Text>
-            </Pressable>
-          ))}
+      <View style={styles.headerRow}>
+        {onBack ? (
+          <Pressable
+            onPress={onBack}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            style={({ pressed }) => [
+              styles.back,
+              large && styles.backLarge,
+              pressed && { opacity: 0.6 },
+            ]}
+          >
+            <Ionicons
+              name="chevron-back"
+              size={large ? 24 : 20}
+              color={colors.textPrimary}
+            />
+          </Pressable>
+        ) : null}
+        <View style={styles.headerText}>
+          <Text
+            style={[styles.headerTitle, large && styles.headerTitleLarge]}
+            numberOfLines={1}
+          >
+            {title}
+          </Text>
+          {subtitle ? (
+            <Text style={styles.headerSubtitle} numberOfLines={1}>{subtitle}</Text>
+          ) : null}
         </View>
+        {right}
       </View>
-      {subtitle ? <Text style={styles.headerSubtitle}>{subtitle}</Text> : null}
-      {children}
+      {children ? <View style={styles.headerExtra}>{children}</View> : null}
     </View>
   );
 }
 
-// White pill with teal text — the only status treatment allowed on coral
-export function HeaderStatusPill({ label }) {
-  return (
-    <View style={styles.headerPill}>
-      <Text style={styles.headerPillText}>{label}</Text>
-    </View>
-  );
+export function Panel({ children, style }) {
+  return <View style={[styles.panel, style]}>{children}</View>;
 }
 
-// Mint pill — for status anywhere on white surfaces
-export function StatusPill({ label }) {
-  return (
-    <View style={styles.mintPill}>
-      <Text style={styles.mintPillText}>{label}</Text>
-    </View>
-  );
-}
+/**
+ * The action.
+ *
+ * One per screen wherever possible — if everything is prominent, a rider
+ * glancing down while the light is green has to read all of it.
+ */
+export function Button({
+  label, onPress, disabled, variant = 'primary', size = 'default', icon,
+}) {
+  const ghost = variant === 'ghost';
+  const large = size === 'large';
 
-// The one deep-coral CTA per screen
-export function PrimaryButton({ label, onPress, disabled }) {
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
       style={({ pressed }) => [
-        styles.cta,
+        styles.button,
+        { minHeight: TARGET[size] },
+        large && styles.buttonLarge,
+        ghost && styles.buttonGhost,
         pressed && { opacity: 0.85 },
         disabled && { opacity: 0.4 },
       ]}
     >
-      <Text style={styles.ctaText}>{label}</Text>
+      {icon ? (
+        <Ionicons
+          name={icon}
+          size={large ? 22 : 18}
+          color={ghost ? colors.textPrimary : colors.white}
+          style={{ marginRight: spacing.sm }}
+        />
+      ) : null}
+      <Text
+        style={[
+          ghost ? styles.buttonGhostText : styles.buttonText,
+          large && styles.buttonTextLarge,
+        ]}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
 
-// Labelled text input. Neutral on white, like everything below a header.
-export function Field({ label, ...props }) {
+export function Input({ label, style, size = 'default', ...props }) {
   return (
     <View style={styles.field}>
-      <Text style={styles.fieldLabel}>{label}</Text>
+      {label ? <Text style={styles.fieldLabel}>{label}</Text> : null}
       <TextInput
-        style={styles.input}
+        style={[
+          styles.input,
+          { minHeight: TARGET[size] },
+          props.multiline && styles.inputMultiline,
+          style,
+        ]}
         placeholderTextColor={colors.textMuted}
         {...props}
       />
@@ -92,60 +136,89 @@ export function Field({ label, ...props }) {
   );
 }
 
-// Errors have no colour of their own in Style C — deep coral is the only
-// alerting tone in the palette, used as text rather than a filled surface so
-// it never competes with the screen's single CTA.
-export function ErrorText({ children }) {
-  return children ? <Text style={styles.error}>{children}</Text> : null;
-}
-
-// Quiet secondary action. Deliberately not a button: one coral CTA per screen.
-export function TextLink({ label, onPress }) {
+export function LinkButton({ label, onPress, tone = 'coral' }) {
   return (
-    <Pressable onPress={onPress} style={styles.link}>
-      <Text style={styles.linkText}>{label}</Text>
+    <Pressable
+      onPress={onPress}
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      style={styles.link}
+    >
+      <Text style={tone === 'muted' ? styles.linkMuted : styles.linkText}>{label}</Text>
     </Pressable>
   );
+}
+
+/** Mint means status, and only status. Never an action. */
+export function StatusPill({ label, tone = 'mint' }) {
+  const quiet = tone === 'quiet';
+  return (
+    <View style={[styles.pill, quiet && styles.pillQuiet]}>
+      <Text style={[styles.pillText, quiet && styles.pillQuietText]}>{label}</Text>
+    </View>
+  );
+}
+
+/** Errors are coral text, never a filled surface — that's the CTA's job. */
+export function ErrorText({ children }) {
+  return children ? <Text style={styles.error}>{children}</Text> : null;
 }
 
 /**
  * Confirmation dialog.
  *
- * Deliberately not React Native's Alert.alert — that is a no-op on
- * react-native-web, so any confirm built on it silently does nothing in a
- * browser, including the error path. Modal works on both.
+ * A Modal rather than Alert.alert, which is a no-op on react-native-web — the
+ * customer app runs in a browser for testing, and a confirm that silently does
+ * nothing there would take its error path with it.
  */
-export function ConfirmDialog({
-  visible, title, message, confirmLabel, onConfirm, onCancel, busy, error,
+export function ConfirmSheet({
+  visible, title, message, confirmLabel, onConfirm, onCancel, busy, error, size,
 }) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.scrim}>
-        <View style={styles.dialog}>
-          <Text style={styles.dialogTitle}>{title}</Text>
-          {message ? <Text style={styles.dialogMessage}>{message}</Text> : null}
+        <View style={styles.sheet}>
+          <Text style={styles.sheetTitle}>{title}</Text>
+          {message ? <Text style={styles.sheetMessage}>{message}</Text> : null}
           <ErrorText>{error}</ErrorText>
-          <PrimaryButton label={confirmLabel} onPress={onConfirm} disabled={busy} />
-          <TextLink label="Cancel" onPress={onCancel} />
+          <Button label={confirmLabel} onPress={onConfirm} disabled={busy} size={size} />
+          <LinkButton label="Not now" onPress={onCancel} tone="muted" />
         </View>
       </View>
     </Modal>
   );
 }
 
-export function Card({ children, style }) {
-  return <View style={[styles.card, style]}>{children}</View>;
+/** A labelled fact — the bulk of a rider's screen is these. */
+export function InfoRow({ label, value, icon }) {
+  return (
+    <View style={styles.infoRow}>
+      {icon ? (
+        <Ionicons name={icon} size={18} color={colors.textMuted} style={styles.infoIcon} />
+      ) : null}
+      <View style={{ flex: 1 }}>
+        <Text style={styles.infoLabel}>{label}</Text>
+        <Text style={styles.infoValue}>{value}</Text>
+      </View>
+    </View>
+  );
 }
 
-/**
- * Quantity control for a basket line.
- *
- * Deliberately outlined rather than coral: the basket's one deep-coral CTA is
- * "Place order", and a row of coral steppers would read as five competing
- * buttons. At qty 1 the minus becomes a remove, which is why the label is
- * driven by the caller rather than assumed here.
- */
-export function QtyStepper({ qty, onDecrement, onIncrement, decrementLabel = '−' }) {
+export function Body({ children, contentStyle, ...props }) {
+  return (
+    <ScrollView
+      contentContainerStyle={[styles.body, contentStyle]}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+      {...props}
+    >
+      {children}
+    </ScrollView>
+  );
+}
+
+/** Quantity control for a basket line. Outlined, so it never competes with
+ *  the screen's one coral action. */
+export function QtyStepper({ qty, onDecrement, onIncrement, decrementLabel }) {
   return (
     <View style={styles.stepper}>
       <Pressable
@@ -153,7 +226,11 @@ export function QtyStepper({ qty, onDecrement, onIncrement, decrementLabel = '�
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         style={({ pressed }) => [styles.stepperBtn, pressed && { opacity: 0.5 }]}
       >
-        <Text style={styles.stepperSymbol}>{decrementLabel}</Text>
+        {decrementLabel === '✕' ? (
+          <Ionicons name="trash-outline" size={15} color={colors.textPrimary} />
+        ) : (
+          <Ionicons name="remove" size={17} color={colors.textPrimary} />
+        )}
       </Pressable>
       <Text style={styles.stepperQty}>{qty}</Text>
       <Pressable
@@ -161,25 +238,24 @@ export function QtyStepper({ qty, onDecrement, onIncrement, decrementLabel = '�
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         style={({ pressed }) => [styles.stepperBtn, pressed && { opacity: 0.5 }]}
       >
-        <Text style={styles.stepperSymbol}>+</Text>
+        <Ionicons name="add" size={17} color={colors.textPrimary} />
       </Pressable>
     </View>
   );
 }
 
-/**
- * A row the user picks from a short list — saved addresses, for now.
- *
- * Selection is shown with a coral dot and weight rather than a filled surface,
- * because mint is reserved for status and coral fills are reserved for the CTA.
- */
+/** A row picked from a short list — saved addresses, for now. */
 export function SelectRow({ title, detail, selected, onPress, trailing }) {
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [styles.selectRow, pressed && { opacity: 0.6 }]}
     >
-      <View style={[styles.selectDot, selected && styles.selectDotOn]} />
+      <Ionicons
+        name={selected ? 'radio-button-on' : 'radio-button-off'}
+        size={20}
+        color={selected ? colors.coralDeep : colors.border}
+      />
       <View style={styles.selectText}>
         <Text style={selected ? styles.selectTitleOn : styles.selectTitle}>{title}</Text>
         {detail ? <Text style={styles.selectDetail}>{detail}</Text> : null}
@@ -191,103 +267,94 @@ export function SelectRow({ title, detail, selected, onPress, trailing }) {
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: semantic.headerBg,
-    paddingHorizontal: spacing.headerPadding,
+    backgroundColor: browse.pageBg,
+    paddingHorizontal: spacing.screenPadding,
     paddingTop: spacing.xl,
-    paddingBottom: spacing.lg,
+    paddingBottom: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.divider,
   },
-  headerBack: { alignSelf: 'flex-start', marginBottom: spacing.xs },
-  headerBackText: {
-    fontSize: typography.caption,
-    fontWeight: typography.medium,
-    color: colors.coralTextMid,
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  back: {
+    width: 34, height: 34, borderRadius: 17,
+    backgroundColor: browse.chipBg,
+    alignItems: 'center', justifyContent: 'center',
   },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
+  backLarge: { width: 44, height: 44, borderRadius: 22 },
+  headerText: { flex: 1 },
   headerTitle: {
-    fontSize: typography.screenTitle,
-    fontWeight: typography.medium,
-    color: semantic.headerTitle,
-    flexShrink: 1,
+    fontSize: typography.title,
+    fontWeight: typography.bold,
+    color: colors.textPrimary,
   },
-  headerActions: { flexDirection: 'row', alignItems: 'center' },
-  headerAction: {
-    marginLeft: spacing.md,
-    fontSize: typography.caption,
-    fontWeight: typography.medium,
-    color: colors.coralTextMid,
+  headerTitleLarge: { fontSize: typography.hero - 2 },
+  headerSubtitle: { marginTop: 2, fontSize: typography.caption, color: colors.textMuted },
+  headerExtra: { marginTop: spacing.sm },
+
+  panel: {
+    backgroundColor: browse.sectionBg,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
   },
-  headerSubtitle: {
-    marginTop: 2,
-    fontSize: typography.caption,
-    color: semantic.headerSubtitle,
-  },
-  headerPill: {
-    alignSelf: 'flex-start',
-    marginTop: spacing.sm,
-    backgroundColor: semantic.statusPillOnHeaderBg,
-    paddingVertical: 3,
-    paddingHorizontal: 10,
-    borderRadius: radius.pill,
-  },
-  headerPillText: {
-    fontSize: typography.pill,
-    fontWeight: typography.medium,
-    color: semantic.statusPillOnHeaderText,
-  },
-  mintPill: {
-    alignSelf: 'flex-start',
-    backgroundColor: semantic.statusBg,
-    paddingVertical: 3,
-    paddingHorizontal: 10,
-    borderRadius: radius.pill,
-  },
-  mintPillText: {
-    fontSize: typography.pill,
-    fontWeight: typography.medium,
-    color: semantic.statusText,
-  },
-  cta: {
-    backgroundColor: semantic.ctaBg,
-    paddingVertical: 12,
+
+  button: {
+    flexDirection: 'row',
+    backgroundColor: colors.coralDeep,
     borderRadius: radius.sm,
+    paddingVertical: 12,
+    paddingHorizontal: spacing.lg,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  ctaText: {
-    color: semantic.ctaText,
-    fontSize: typography.body,
-    fontWeight: typography.medium,
-  },
-  field: { marginBottom: spacing.md },
-  fieldLabel: {
-    fontSize: typography.pill,
-    color: colors.textMuted,
-    marginBottom: spacing.xs,
-  },
-  input: {
+  buttonLarge: { borderRadius: radius.md, paddingVertical: 16 },
+  buttonGhost: {
+    backgroundColor: 'transparent',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
+  },
+  buttonText: {
+    color: colors.white, fontSize: typography.body, fontWeight: typography.semibold,
+  },
+  buttonTextLarge: { fontSize: typography.subhead + 2 },
+  buttonGhostText: {
+    color: colors.textPrimary, fontSize: typography.body, fontWeight: typography.medium,
+  },
+
+  field: { marginBottom: spacing.md },
+  fieldLabel: {
+    fontSize: typography.pill, color: colors.textMuted, marginBottom: spacing.xs,
+  },
+  input: {
+    backgroundColor: colors.surfaceSearch,
     borderRadius: radius.sm,
     paddingHorizontal: spacing.md,
-    paddingVertical: 10,
+    paddingVertical: 12,
     fontSize: typography.body,
     color: colors.textPrimary,
-    backgroundColor: colors.white,
   },
-  error: {
-    fontSize: typography.caption,
-    color: colors.coralDeep,
-    marginBottom: spacing.md,
-  },
+  inputMultiline: { minHeight: 76, textAlignVertical: 'top' },
+
   link: { paddingVertical: spacing.md, alignItems: 'center' },
   linkText: {
-    fontSize: typography.caption,
-    fontWeight: typography.medium,
-    color: colors.tealTextDark,
+    fontSize: typography.caption, fontWeight: typography.semibold, color: colors.coralDeep,
   },
+  linkMuted: { fontSize: typography.caption, color: colors.textMuted },
+
+  pill: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.mintPastel,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: radius.pill,
+  },
+  pillQuiet: { backgroundColor: browse.chipBg },
+  pillText: {
+    fontSize: typography.pill, fontWeight: typography.semibold, color: colors.tealTextDark,
+  },
+  pillQuietText: { color: colors.textMuted },
+
+  error: { fontSize: typography.caption, color: colors.coralDeep, marginBottom: spacing.md },
+
   scrim: {
     flex: 1,
     backgroundColor: colors.scrim,
@@ -295,78 +362,49 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.screenPadding,
   },
-  dialog: {
-    width: '100%',
-    maxWidth: 340,
+  sheet: {
+    width: '100%', maxWidth: 340,
     backgroundColor: colors.white,
     borderRadius: radius.xl,
     padding: spacing.lg,
   },
-  dialogTitle: {
-    fontSize: typography.sectionTitle,
-    fontWeight: typography.medium,
-    color: colors.textPrimary,
+  sheetTitle: {
+    fontSize: typography.subhead, fontWeight: typography.bold, color: colors.textPrimary,
   },
-  dialogMessage: {
-    marginTop: spacing.xs,
-    marginBottom: spacing.lg,
-    fontSize: typography.caption,
-    color: colors.textMuted,
+  sheetMessage: {
+    marginTop: spacing.xs, marginBottom: spacing.lg,
+    fontSize: typography.caption, color: colors.textMuted, lineHeight: 18,
   },
-  card: {
-    backgroundColor: colors.white,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: semantic.cardBorder,
-    borderRadius: radius.md,
-    padding: spacing.md,
+
+  infoRow: { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: spacing.sm },
+  infoIcon: { marginRight: spacing.sm, marginTop: 2 },
+  infoLabel: { fontSize: typography.pill, color: colors.textMuted },
+  infoValue: {
+    marginTop: 2, fontSize: typography.subhead, color: colors.textPrimary,
   },
+
+  body: { padding: spacing.screenPadding },
+
   stepper: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   stepperBtn: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepperSymbol: {
-    fontSize: 15,
-    lineHeight: 18,
-    color: colors.textPrimary,
+    width: 30, height: 30, borderRadius: 15,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: colors.border,
+    alignItems: 'center', justifyContent: 'center',
   },
   stepperQty: {
-    minWidth: 16,
-    textAlign: 'center',
-    fontSize: typography.body,
-    fontWeight: typography.medium,
-    color: colors.textPrimary,
+    minWidth: 16, textAlign: 'center',
+    fontSize: typography.body, fontWeight: typography.medium, color: colors.textPrimary,
   },
+
   selectRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.divider,
-  },
-  selectDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-  },
-  selectDotOn: {
-    backgroundColor: colors.coralDeep,
-    borderColor: colors.coralDeep,
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    paddingVertical: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.divider,
   },
   selectText: { flex: 1 },
   selectTitle: { fontSize: typography.body, color: colors.textPrimary },
   selectTitleOn: {
-    fontSize: typography.body,
-    fontWeight: typography.medium,
-    color: colors.textPrimary,
+    fontSize: typography.body, fontWeight: typography.medium, color: colors.textPrimary,
   },
   selectDetail: { marginTop: 2, fontSize: typography.caption, color: colors.textMuted },
 });

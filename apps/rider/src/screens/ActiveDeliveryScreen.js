@@ -1,22 +1,33 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Linking } from 'react-native';
-import { CoralHeader, HeaderStatusPill, Card, PrimaryButton, ErrorText } from '@food-dash/ui';
-import { colors, spacing, typography } from '@food-dash/theme';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Linking, ScrollView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import {
+  ScreenHeader, Panel, Button, StatusPill, ErrorText, InfoRow,
+} from '@food-dash/ui';
+import { colors, browse, spacing, typography } from '@food-dash/theme';
 import { formatMoney } from '@food-dash/money';
-import { advanceDelivery } from '../lib/rider';
+import { advanceDelivery, fetchCustomerContact } from '../lib/rider';
 
-// Mirrors the delivery_status enum in the database. 'unassigned' never
-// appears here — you only reach this screen by claiming an order.
+// The screen a rider looks at while moving.
+//
+// Everything here is sized for a glance and a gloved thumb: one action, at the
+// bottom, unmissable. The two things a rider actually needs mid-run — where am
+// I going, and who do I call — are the two loudest items above it.
+
 const STAGE = {
   assigned: {
     label: 'Heading to restaurant',
     cta: 'Picked up — start delivery',
+    icon: 'restaurant-outline',
     destination: (o) => o.pickup,
+    destinationLabel: 'Pick up from',
   },
   picked_up: {
     label: 'Delivering to customer',
     cta: 'Mark as delivered',
+    icon: 'bicycle-outline',
     destination: (o) => o.dropoff,
+    destinationLabel: 'Deliver to',
   },
 };
 
@@ -25,8 +36,20 @@ export default function ActiveDeliveryScreen({ route, navigation }) {
   const [status, setStatus] = useState(order.deliveryStatus || 'assigned');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [customer, setCustomer] = useState(null);
 
   const stage = STAGE[status];
+
+  // Fetched rather than passed in the order payload, because the database
+  // decides who may see this and for how long. A null answer after delivery is
+  // the window closing, not a failure.
+  useEffect(() => {
+    let active = true;
+    fetchCustomerContact(order.id)
+      .then((c) => { if (active) setCustomer(c); })
+      .catch(() => { if (active) setCustomer(null); });
+    return () => { active = false; };
+  }, [order.id, status]);
 
   const advance = async () => {
     setBusy(true);
@@ -50,55 +73,115 @@ export default function ActiveDeliveryScreen({ route, navigation }) {
     Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${dest}`);
   };
 
+  const call = () => Linking.openURL(`tel:${customer.phone}`);
+
   return (
     <View style={styles.screen}>
-      <CoralHeader
-        back={{ label: 'Orders', onPress: () => navigation.popToTop() }}
+      <ScreenHeader
+        size="large"
+        onBack={() => navigation.popToTop()}
         title={`Order #${order.number}`}
         subtitle={order.restaurant}
       >
-        <HeaderStatusPill label={stage?.label ?? 'Delivered'} />
-      </CoralHeader>
-      <View style={{ padding: spacing.screenPadding, gap: spacing.md }}>
-        <Card>
-          <Text style={styles.label}>Pickup</Text>
-          <Text style={styles.value}>{order.restaurant} — {order.pickup}</Text>
-          <Text style={[styles.label, { marginTop: spacing.sm }]}>Drop-off</Text>
-          <Text style={styles.value}>{order.dropoff}</Text>
-          {order.notes ? (
-            <>
-              <Text style={[styles.label, { marginTop: spacing.sm }]}>Customer notes</Text>
-              <Text style={styles.value}>{order.notes}</Text>
-            </>
-          ) : null}
-          <Text style={[styles.label, { marginTop: spacing.sm }]}>Your payout</Text>
-          <Text style={styles.payout}>{formatMoney(order.payoutCents)}</Text>
-        </Card>
-        <Card>
-          <Text style={styles.navHint} onPress={openMaps}>Open route in Google Maps →</Text>
-        </Card>
+        <StatusPill label={stage?.label ?? 'Delivered'} />
+      </ScreenHeader>
+
+      <ScrollView contentContainerStyle={styles.body}>
+        {/* Where to go, biggest thing on the screen after the action. Which
+            address it is changes with the stage, so a rider never has to work
+            out which of two addresses applies right now. */}
+        <Panel>
+          <Text style={styles.destLabel}>{stage?.destinationLabel ?? 'Delivered to'}</Text>
+          <Text style={styles.destValue}>{stage?.destination(order) ?? order.dropoff}</Text>
+          <Button
+            label="Open in Google Maps"
+            icon="navigate"
+            variant="ghost"
+            size="large"
+            onPress={openMaps}
+          />
+        </Panel>
+
+        {customer ? (
+          <Panel>
+            <InfoRow label="Customer" value={customer.name} icon="person-outline" />
+            {customer.phone ? (
+              // No in-app chat in the MVP by design — this IS how a rider who
+              // can't find the gate reaches someone.
+              <Button
+                label={`Call ${customer.phone}`}
+                icon="call"
+                variant="ghost"
+                size="large"
+                onPress={call}
+              />
+            ) : (
+              <Text style={styles.noPhone}>No number on file for this customer.</Text>
+            )}
+          </Panel>
+        ) : null}
+
+        {order.notes ? (
+          <Panel style={styles.notes}>
+            <InfoRow label="Customer notes" value={order.notes} icon="chatbubble-outline" />
+          </Panel>
+        ) : null}
+
+        <Panel>
+          <View style={styles.payoutRow}>
+            <View>
+              <Text style={styles.destLabel}>You earn</Text>
+              <Text style={styles.payout}>{formatMoney(order.payoutCents)}</Text>
+            </View>
+            <Ionicons name="cash-outline" size={26} color={colors.coralDeep} />
+          </View>
+        </Panel>
 
         <ErrorText>{error}</ErrorText>
+      </ScrollView>
 
-        {stage?.cta && (
-          <PrimaryButton
+      {/* Pinned rather than scrolled to: the one thing a rider needs to press
+          must never be below the fold. */}
+      {stage?.cta && (
+        <View style={styles.actionBar}>
+          <Button
             label={busy ? 'Updating…' : stage.cta}
+            icon={stage.icon}
+            size="large"
             onPress={advance}
             disabled={busy}
           />
-        )}
-      </View>
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.white },
-  label: { fontSize: typography.pill, color: colors.textMuted },
-  value: { fontSize: typography.body, color: colors.textPrimary, marginTop: 2 },
-  payout: {
-    fontSize: typography.sectionTitle, fontWeight: '500',
-    color: colors.coralDeep, marginTop: 2,
+  screen: { flex: 1, backgroundColor: browse.pageBg },
+  body: { padding: spacing.screenPadding, gap: spacing.md, paddingBottom: spacing.xl },
+  destLabel: { fontSize: typography.pill, color: colors.textMuted },
+  destValue: {
+    marginTop: 4,
+    marginBottom: spacing.md,
+    fontSize: typography.title,
+    fontWeight: typography.semibold,
+    color: colors.textPrimary,
+    lineHeight: 28,
   },
-  navHint: { fontSize: typography.body, fontWeight: '500', color: colors.tealTextDark },
+  noPhone: { marginTop: spacing.sm, fontSize: typography.caption, color: colors.textMuted },
+  notes: { backgroundColor: colors.mintPastel },
+  payoutRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  payout: {
+    marginTop: 2,
+    fontSize: typography.hero,
+    fontWeight: typography.bold,
+    color: colors.coralDeep,
+  },
+  actionBar: {
+    padding: spacing.screenPadding,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.divider,
+    backgroundColor: browse.pageBg,
+  },
 });

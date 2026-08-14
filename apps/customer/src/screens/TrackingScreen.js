@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Linking } from 'react-native';
-import { StatusPill } from '@food-dash/ui';
+import { Ionicons } from '@expo/vector-icons';
 import {
-  ScreenHeader, Panel, LinkButton, ConfirmSheet,
-} from '../components/chrome';
+  StatusPill, ScreenHeader, Panel, LinkButton, ConfirmSheet,
+} from '@food-dash/ui';
 import { colors, browse, spacing, typography } from '@food-dash/theme';
 import { formatMoney } from '@food-dash/money';
 import {
@@ -87,7 +87,8 @@ export default function TrackingScreen({ route, navigation }) {
     </View>
   );
 
-  if (error) return header(<EmptyState title="Couldn't load this order" detail={error} />);
+  if (error) return header(<EmptyState title="Couldn't load this order"
+      icon="cloud-offline-outline" detail={error} />);
   if (!order) return header(<Loading />);
 
   if (order.status === 'cancelled') {
@@ -137,18 +138,35 @@ export default function TrackingScreen({ route, navigation }) {
       ) : null}
 
       <Panel>
-        {STEPS.map((label, i) => (
-          <View key={label} style={styles.stepRow}>
-            <View
-              style={[
-                styles.dot,
-                i < step && styles.dotDone,
-                i === step && styles.dotActive,
-              ]}
-            />
-            <Text style={i === step ? styles.stepActive : styles.stepMuted}>{label}</Text>
-          </View>
-        ))}
+        {STEPS.map((label, i) => {
+          const done = i < step;
+          const current = i === step;
+          return (
+            <View key={label} style={styles.stepRow}>
+              <View style={styles.stepMarker}>
+                {/* A tick for what's finished, a filled ring for where the
+                    order is now. Three shades of dot asked the customer to
+                    decode a legend nobody gave them. */}
+                <Ionicons
+                  name={done ? 'checkmark-circle' : current ? 'ellipse' : 'ellipse-outline'}
+                  size={done ? 20 : current ? 14 : 12}
+                  color={
+                    done ? colors.tealTextDark
+                      : current ? colors.coralDeep
+                        : colors.border
+                  }
+                />
+                {/* The line joining the steps stops at the last one. */}
+                {i < STEPS.length - 1 ? (
+                  <View style={[styles.stepLine, done && styles.stepLineDone]} />
+                ) : null}
+              </View>
+              <Text style={current ? styles.stepActive : done ? styles.stepDone : styles.stepMuted}>
+                {label}
+              </Text>
+            </View>
+          );
+        })}
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </Panel>
 
@@ -190,12 +208,20 @@ const styles = StyleSheet.create({
     fontWeight: typography.semibold,
     color: colors.textPrimary,
   },
-  stepRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 4 },
-  dot: { width: 14, height: 14, borderRadius: 7, backgroundColor: colors.surfaceMuted },
-  dotDone: { backgroundColor: colors.mintPastel },
-  dotActive: { backgroundColor: colors.coralDeep },
-  stepActive: { fontSize: typography.caption, fontWeight: '500', color: colors.textPrimary },
-  stepMuted: { fontSize: typography.caption, color: colors.textMuted },
+  stepRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md },
+  stepMarker: { width: 20, alignItems: 'center' },
+  stepLine: {
+    width: 2, height: 22, marginVertical: 2,
+    backgroundColor: colors.divider,
+  },
+  stepLineDone: { backgroundColor: colors.mintPastel },
+  stepActive: {
+    fontSize: typography.subhead,
+    fontWeight: typography.semibold,
+    color: colors.textPrimary,
+  },
+  stepDone: { fontSize: typography.body, color: colors.textSecondary },
+  stepMuted: { fontSize: typography.body, color: colors.textMuted },
   subtitle: {
     marginTop: spacing.sm,
     fontSize: typography.caption,

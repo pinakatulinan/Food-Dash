@@ -1,14 +1,15 @@
 // Marketplace building blocks — Home and Restaurant only.
 //
-// These deliberately do NOT live in @food-dash/ui. That package is the Style C
-// set shared with the rider app: coral header on every screen, one coral CTA,
-// mint for status. The browse screens follow a different system — neutral
-// chrome, imagery carrying the weight, coral used sparingly as an accent — and
-// mixing the two in one package would leave neither legible.
+// These stay out of @food-dash/ui on purpose. That package holds what both
+// apps share: headers, buttons, inputs, panels. What's here is specific to
+// browsing a shop — food photography, search, category rails, a basket bar —
+// and none of it means anything in a rider app. Putting it in the shared
+// package would make "shared" stop meaning anything.
 import React from 'react';
 import {
   View, Text, Image, Pressable, TextInput, ScrollView, StyleSheet,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, browse, spacing, radius, typography } from '@food-dash/theme';
 import { formatMoney } from '@food-dash/money';
 
@@ -63,7 +64,7 @@ export function FoodImage({ uri, name, style, rounded }) {
 export function SearchBar({ value, onChangeText, placeholder }) {
   return (
     <View style={styles.search}>
-      <Text style={styles.searchIcon}>⌕</Text>
+      <Ionicons name="search" size={18} color={colors.textMuted} />
       <TextInput
         style={styles.searchInput}
         value={value}
@@ -127,6 +128,11 @@ export function RestaurantCard({ restaurant, onPress }) {
         {!isOpen ? (
           <View style={[styles.banner, styles.closedVeil]}>
             <Text style={styles.closedText}>Closed</Text>
+            {/* Says when to come back, so a closed card is information rather
+                than a dead end. */}
+            {restaurant.opensLabel ? (
+              <Text style={styles.closedWhen}>{restaurant.opensLabel}</Text>
+            ) : null}
           </View>
         ) : null}
       </View>
@@ -164,7 +170,7 @@ export function MenuRow({ item, qty, onAdd }) {
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.8 }]}
         >
-          <Text style={styles.addBtnText}>+</Text>
+          <Ionicons name="add" size={20} color={colors.coralDeep} />
         </Pressable>
         {/* How many are already in the basket, so you don't have to open it
             to remember. */}
@@ -273,6 +279,12 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: typography.subhead,
     fontWeight: typography.semibold,
+  },
+  closedWhen: {
+    marginTop: 2,
+    color: colors.white,
+    fontSize: typography.caption,
+    opacity: 0.9,
   },
   cardTitle: {
     marginTop: spacing.sm,

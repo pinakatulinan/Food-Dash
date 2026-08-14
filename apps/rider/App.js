@@ -6,7 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { colors, spacing, typography } from '@food-dash/theme';
 import { supabase } from './src/lib/supabase';
 import { useSession } from './src/lib/useSession';
-import { fetchRiderRecord } from './src/lib/rider';
+import { fetchRiderRecord, fetchActiveDelivery } from './src/lib/rider';
 import AuthScreen from './src/screens/AuthScreen';
 import PendingApprovalScreen from './src/screens/PendingApprovalScreen';
 import IncomingOrdersScreen from './src/screens/IncomingOrdersScreen';
@@ -20,6 +20,8 @@ export default function App() {
   const { session, loading } = useSession();
   const [rider, setRider] = useState(null);
   const [riderLoading, setRiderLoading] = useState(true);
+  const [activeOrder, setActiveOrder] = useState(null);
+  const [resumeChecked, setResumeChecked] = useState(false);
 
   // Keyed on the user id, not the session object. Supabase hands out a fresh
   // session on every token refresh, and depending on the object meant an idle
@@ -39,7 +41,31 @@ export default function App() {
 
   useEffect(() => { setRiderLoading(true); refreshRider(); }, [refreshRider]);
 
-  if (loading || (session && riderLoading)) {
+  // A delivery already in progress when the app opens.
+  //
+  // The app can restart mid-delivery for reasons that have nothing to do with
+  // the rider — a phone running out of memory behind Maps, a crash, Expo Go
+  // reloading. Without this they land on the incoming orders list with the
+  // food still on the bike and no route back to the order.
+  //
+  // Checked before the navigator mounts, so the delivery screen is where the
+  // app opens rather than somewhere it jumps to a moment later.
+  const approved = rider?.status === 'approved';
+  useEffect(() => {
+    let active = true;
+    if (!userId || !approved) { setResumeChecked(true); return undefined; }
+
+    fetchActiveDelivery(userId)
+      .then((order) => { if (active) setActiveOrder(order); })
+      // A failed lookup must not block sign-in. Worst case the rider gets the
+      // in-progress card on the orders list instead.
+      .catch(() => {})
+      .finally(() => { if (active) setResumeChecked(true); });
+
+    return () => { active = false; };
+  }, [userId, approved]);
+
+  if (loading || (session && riderLoading) || (approved && !resumeChecked)) {
     return (
       <View style={styles.splash}>
         <StatusBar style="dark" />
@@ -84,7 +110,18 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer
+      // Opens straight onto the delivery in progress, with the orders list
+      // underneath it — so Back still goes where a rider expects, rather than
+      // trapping them on a screen with nothing behind it.
+      initialState={activeOrder ? {
+        index: 1,
+        routes: [
+          { name: 'IncomingOrders' },
+          { name: 'ActiveDelivery', params: { order: activeOrder } },
+        ],
+      } : undefined}
+    >
       <StatusBar style="dark" />
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="IncomingOrders">

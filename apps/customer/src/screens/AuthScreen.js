@@ -4,8 +4,8 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, browse, spacing, typography } from '@food-dash/theme';
-import { ErrorText } from '@food-dash/ui';
-import { Input, Button, LinkButton } from '../components/chrome';
+import { ErrorText, Input, Button, LinkButton } from '@food-dash/ui';
+import { isUsablePhone } from '../lib/profile';
 import { supabase } from '../lib/supabase';
 
 // Email + password with confirmations turned off, so signup logs you straight
@@ -13,6 +13,7 @@ import { supabase } from '../lib/supabase';
 export default function AuthScreen() {
   const [signingUp, setSigningUp] = useState(false);
   const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -21,6 +22,10 @@ export default function AuthScreen() {
   const submit = async () => {
     if (signingUp && !fullName.trim()) {
       setError('Please enter your name.');
+      return;
+    }
+    if (signingUp && !isUsablePhone(phone)) {
+      setError('Please enter a mobile number your rider can call.');
       return;
     }
     setBusy(true);
@@ -33,7 +38,15 @@ export default function AuthScreen() {
           // handle_new_user() reads these to build the profile row. Without
           // full_name the profile is created with a blank name; role is
           // whitelisted server-side, so sending it is a hint, not a grant.
-          options: { data: { full_name: fullName.trim(), role: 'customer' } },
+          // The phone is unverified until OTP replaces this — it exists so a
+          // rider standing at the wrong gate can call someone.
+          options: {
+            data: {
+              full_name: fullName.trim(),
+              phone: phone.trim(),
+              role: 'customer',
+            },
+          },
         })
       : await supabase.auth.signInWithPassword({ email: email.trim(), password });
 
@@ -97,14 +110,24 @@ export default function AuthScreen() {
 
           <View style={styles.fields}>
             {signingUp && (
-              <Input
-                label="Full name"
-                value={fullName}
-                onChangeText={setFullName}
-                placeholder="Juan dela Cruz"
-                autoCapitalize="words"
-                textContentType="name"
-              />
+              <>
+                <Input
+                  label="Full name"
+                  value={fullName}
+                  onChangeText={setFullName}
+                  placeholder="Juan dela Cruz"
+                  autoCapitalize="words"
+                  textContentType="name"
+                />
+                <Input
+                  label="Mobile number"
+                  value={phone}
+                  onChangeText={setPhone}
+                  placeholder="0917 123 4567"
+                  keyboardType="phone-pad"
+                  textContentType="telephoneNumber"
+                />
+              </>
             )}
             <Input
               label="Email"
@@ -136,7 +159,10 @@ export default function AuthScreen() {
                 : signingUp ? 'Create account' : 'Sign in'
             }
             onPress={submit}
-            disabled={busy || !email.trim() || !password}
+            disabled={
+              busy || !email.trim() || !password ||
+              (signingUp && (!fullName.trim() || !isUsablePhone(phone)))
+            }
           />
           <LinkButton
             label={

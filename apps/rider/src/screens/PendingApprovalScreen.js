@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { CoralHeader, Card, HeaderStatusPill } from '@food-dash/ui';
-import { colors, spacing, typography } from '@food-dash/theme';
+import { ScreenHeader, Panel, StatusPill, LinkButton } from '@food-dash/ui';
+import { colors, browse, spacing, typography } from '@food-dash/theme';
 
 // Shown when a rider account exists but isn't approved. The database enforces
 // this too — the check constraint on riders makes going online impossible
@@ -11,15 +11,19 @@ export default function PendingApprovalScreen({ status, onSignOut }) {
 
   return (
     <View style={styles.screen}>
-      <CoralHeader
+      <ScreenHeader
+        size="large"
         title={suspended ? 'Account suspended' : 'Application received'}
         subtitle="Food-Dash Rider"
-        action={{ label: 'Sign out', onPress: onSignOut }}
+        right={<LinkButton label="Sign out" tone="muted" onPress={onSignOut} />}
       >
-        <HeaderStatusPill label={suspended ? 'Suspended' : 'Pending review'} />
-      </CoralHeader>
+        <StatusPill
+          label={suspended ? 'Suspended' : 'Pending review'}
+          tone={suspended ? 'quiet' : 'mint'}
+        />
+      </ScreenHeader>
       <View style={styles.body}>
-        <Card>
+        <Panel>
           <Text style={styles.title}>
             {suspended ? 'You can’t take orders right now' : 'We’re checking your details'}
           </Text>
@@ -28,14 +32,14 @@ export default function PendingApprovalScreen({ status, onSignOut }) {
               ? 'Please get in touch with the Food-Dash team to sort this out.'
               : 'Bring your driver’s licence, OR/CR and a valid ID to the Food-Dash team. Once you’re approved this screen becomes your order list.'}
           </Text>
-        </Card>
+        </Panel>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.white },
+  screen: { flex: 1, backgroundColor: browse.pageBg },
   body: { padding: spacing.screenPadding },
   title: {
     fontSize: typography.body,

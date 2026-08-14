@@ -76,6 +76,26 @@ export async function fetchActiveDelivery(riderId) {
  * an unclaimed order has no rider_id to match on — so this listens broadly
  * and refetches. RLS still decides what the refetch returns.
  */
+/**
+ * Who this order is going to, and how to reach them.
+ *
+ * profiles is readable only by its owner, so this goes through
+ * order_customer_contact() (migration 010) — the mirror of the function the
+ * customer app uses to see its rider. Returns null once the food is delivered,
+ * which is normal rather than an error.
+ */
+export async function fetchCustomerContact(orderId) {
+  const { data, error } = await supabase.rpc('order_customer_contact', {
+    p_order_id: orderId,
+  });
+
+  if (error) throw error;
+
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) return null;
+  return { name: row.full_name, phone: row.phone };
+}
+
 export function subscribeToOrders(onChange) {
   const channel = supabase
     .channel('rider-orders')

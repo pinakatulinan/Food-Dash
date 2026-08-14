@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
-import { StatusPill, ErrorText } from '@food-dash/ui';
+import {
+  StatusPill, ErrorText, ScreenHeader, ConfirmSheet, LinkButton,
+} from '@food-dash/ui';
 import { colors, browse, spacing, typography } from '@food-dash/theme';
 import { supabase } from '../lib/supabase';
 import { useSession } from '../lib/useSession';
@@ -8,7 +10,6 @@ import { fetchAddresses, setDefaultAddress, deleteAddress } from '../lib/address
 import { clearNavigationState } from '../lib/navState';
 import { useAsync } from '../lib/useAsync';
 import { Loading } from '../components/states';
-import { ScreenHeader, ConfirmSheet, LinkButton } from '../components/chrome';
 
 export default function AccountScreen() {
   const { session } = useSession();

@@ -3,6 +3,7 @@ import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { colors, spacing, typography } from '@food-dash/theme';
 import { useSession } from './src/lib/useSession';
@@ -19,12 +20,12 @@ import TrackingScreen from './src/screens/TrackingScreen';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// No icon font is installed, so the tab bar uses glyphs. Swapping in a real
-// icon set later means changing this map and nothing else.
-const TAB_GLYPH = {
-  Home: '⌂',
-  Orders: '☰',
-  Account: '☺',
+// Outline when inactive, solid when selected — the convention every phone user
+// already reads without being told.
+const TAB_ICON = {
+  Home: ['home-outline', 'home'],
+  Orders: ['receipt-outline', 'receipt'],
+  Account: ['person-circle-outline', 'person-circle'],
 };
 
 /**
@@ -43,8 +44,12 @@ function Tabs() {
         tabBarInactiveTintColor: colors.iconInactive,
         tabBarStyle: styles.tabBar,
         tabBarLabelStyle: styles.tabLabel,
-        tabBarIcon: ({ color }) => (
-          <Text style={{ color, fontSize: 18 }}>{TAB_GLYPH[route.name]}</Text>
+        tabBarIcon: ({ color, focused, size }) => (
+          <Ionicons
+            name={TAB_ICON[route.name][focused ? 1 : 0]}
+            size={size ?? 24}
+            color={color}
+          />
         ),
       })}
     >

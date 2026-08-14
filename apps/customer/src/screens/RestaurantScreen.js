@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { View, Text, SectionList, Pressable, StyleSheet } from 'react-native';
-import { ConfirmSheet } from '../components/chrome';
+import { ConfirmSheet } from '@food-dash/ui';
 import { colors, browse, spacing, typography } from '@food-dash/theme';
 import { formatMoney } from '@food-dash/money';
 import { fetchMenu } from '../lib/catalog';
@@ -70,7 +70,9 @@ export default function RestaurantScreen({ route, navigation }) {
       <View style={styles.heroText}>
         <Text style={styles.heroTitle} numberOfLines={2}>{restaurant.name}</Text>
         <Text style={styles.heroMeta}>
-          {restaurant.isOpen ? 'Open now' : 'Closed'} · {restaurant.etaMin}–
+          {restaurant.isOpen
+            ? 'Open now'
+            : restaurant.opensLabel ?? 'Closed'} · {restaurant.etaMin}–
           {restaurant.etaMax} min · {formatMoney(restaurant.deliveryFeeCents)} delivery
         </Text>
       </View>
@@ -87,7 +89,8 @@ export default function RestaurantScreen({ route, navigation }) {
       ) : error ? (
         <>
           {banner}
-          <EmptyState title="Couldn't load the menu" detail={error} />
+          <EmptyState title="Couldn't load the menu"
+          icon="cloud-offline-outline" detail={error} />
         </>
       ) : (
         <SectionList
@@ -118,6 +121,7 @@ export default function RestaurantScreen({ route, navigation }) {
           ListEmptyComponent={
             <EmptyState
               title="Nothing on the menu yet"
+              icon="restaurant-outline"
               detail="This restaurant hasn't added any available items."
             />
           }

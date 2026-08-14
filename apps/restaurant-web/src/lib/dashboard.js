@@ -42,6 +42,70 @@ export async function setOpen(restaurantId, isOpen) {
   return updateRestaurant(restaurantId, { is_open: isOpen });
 }
 
+// ============ OPENING HOURS ============
+// A row per day the restaurant is open. No row means closed that day, so
+// "closed Sundays" is the absence of a row rather than a flag to interpret.
+
+export const WEEKDAYS = [
+  { day: 0, label: 'Sunday' },
+  { day: 1, label: 'Monday' },
+  { day: 2, label: 'Tuesday' },
+  { day: 3, label: 'Wednesday' },
+  { day: 4, label: 'Thursday' },
+  { day: 5, label: 'Friday' },
+  { day: 6, label: 'Saturday' },
+];
+
+export async function fetchHours(restaurantId) {
+  const { data, error } = await supabase
+    .from('restaurant_hours')
+    .select('weekday, opens_at, closes_at')
+    .eq('restaurant_id', restaurantId);
+
+  if (error) throw error;
+
+  // Keyed by weekday so the editor can look a day up without scanning.
+  const byDay = {};
+  data.forEach((h) => {
+    // Postgres returns time as HH:MM:SS; the inputs want HH:MM.
+    byDay[h.weekday] = {
+      opensAt: h.opens_at.slice(0, 5),
+      closesAt: h.closes_at.slice(0, 5),
+    };
+  });
+  return byDay;
+}
+
+/**
+ * Replaces the whole week in one go.
+ *
+ * Deleting everything and re-inserting the open days is simpler than diffing,
+ * and it makes "closed" impossible to get wrong — a day the restaurant
+ * unticked genuinely has no row afterwards, rather than a stale one nobody
+ * noticed.
+ */
+export async function saveHours(restaurantId, byDay) {
+  const rows = Object.entries(byDay)
+    .filter(([, h]) => h && h.opensAt && h.closesAt)
+    .map(([weekday, h]) => ({
+      restaurant_id: restaurantId,
+      weekday: Number(weekday),
+      opens_at: h.opensAt,
+      closes_at: h.closesAt,
+    }));
+
+  const { error: clearError } = await supabase
+    .from('restaurant_hours')
+    .delete()
+    .eq('restaurant_id', restaurantId);
+  if (clearError) throw clearError;
+
+  if (rows.length === 0) return;
+
+  const { error } = await supabase.from('restaurant_hours').insert(rows);
+  if (error) throw error;
+}
+
 // ============ MENU ============
 
 function toMenuItem(row) {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { CoralHeader, Card, ErrorText } from '@food-dash/ui';
-import { colors, spacing, typography } from '@food-dash/theme';
+import { ScreenHeader, Panel, ErrorText } from '@food-dash/ui';
+import { colors, browse, spacing, typography } from '@food-dash/theme';
 import { formatMoney } from '@food-dash/money';
 import { fetchEarnings } from '../lib/rider';
 import { useAsync } from '../lib/useAsync';
@@ -12,8 +12,9 @@ export default function EarningsScreen({ route, navigation }) {
 
   return (
     <View style={styles.screen}>
-      <CoralHeader
-        back={{ label: 'Orders', onPress: () => navigation.goBack() }}
+      <ScreenHeader
+        size="large"
+        onBack={() => navigation.goBack()}
         title="Earnings"
         subtitle="Delivered orders only"
       />
@@ -24,20 +25,20 @@ export default function EarningsScreen({ route, navigation }) {
           <ErrorText>{error}</ErrorText>
         ) : (
           <>
-            <Card>
+            <Panel>
               <Text style={styles.label}>Today</Text>
               <Text style={styles.big}>{formatMoney(data.todayCents)}</Text>
               <Text style={styles.meta}>
                 {data.trips} {data.trips === 1 ? 'delivery' : 'deliveries'}
               </Text>
-            </Card>
-            <Card>
+            </Panel>
+            <Panel>
               <Text style={styles.label}>Last 7 days</Text>
               <Text style={styles.big}>{formatMoney(data.weekCents)}</Text>
               <Text style={styles.meta}>
                 Food-Dash keeps 15% of the delivery fee — the rest is yours
               </Text>
-            </Card>
+            </Panel>
           </>
         )}
       </View>
@@ -46,8 +47,13 @@ export default function EarningsScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.white },
+  screen: { flex: 1, backgroundColor: browse.pageBg },
   label: { fontSize: typography.pill, color: colors.textMuted },
-  big: { fontSize: 28, fontWeight: '500', color: colors.textPrimary, marginTop: 2 },
+  big: {
+    fontSize: typography.hero,
+    fontWeight: typography.bold,
+    color: colors.textPrimary,
+    marginTop: 2,
+  },
   meta: { marginTop: 4, fontSize: typography.caption, color: colors.textMuted },
 });

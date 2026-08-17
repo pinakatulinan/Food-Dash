@@ -16,6 +16,7 @@ import AccountScreen from './src/screens/AccountScreen';
 import RestaurantScreen from './src/screens/RestaurantScreen';
 import CartScreen from './src/screens/CartScreen';
 import TrackingScreen from './src/screens/TrackingScreen';
+import ChatScreen from './src/screens/ChatScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -95,6 +96,7 @@ export default function App() {
             <Stack.Screen name="Restaurant" component={RestaurantScreen} />
             <Stack.Screen name="Cart" component={CartScreen} />
             <Stack.Screen name="Tracking" component={TrackingScreen} />
+            <Stack.Screen name="Chat" component={ChatScreen} />
           </Stack.Navigator>
         ) : (
           <AuthScreen />

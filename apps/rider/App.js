@@ -12,6 +12,7 @@ import PendingApprovalScreen from './src/screens/PendingApprovalScreen';
 import IncomingOrdersScreen from './src/screens/IncomingOrdersScreen';
 import ActiveDeliveryScreen from './src/screens/ActiveDeliveryScreen';
 import EarningsScreen from './src/screens/EarningsScreen';
+import ChatScreen from './src/screens/ChatScreen';
 
 const Stack = createNativeStackNavigator();
 const signOut = () => supabase.auth.signOut();
@@ -135,6 +136,7 @@ export default function App() {
           )}
         </Stack.Screen>
         <Stack.Screen name="ActiveDelivery" component={ActiveDeliveryScreen} />
+        <Stack.Screen name="Chat" component={ChatScreen} />
         <Stack.Screen
           name="Earnings"
           component={EarningsScreen}

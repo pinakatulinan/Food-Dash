@@ -134,6 +134,12 @@ export default function TrackingScreen({ route, navigation }) {
               onPress={() => Linking.openURL(`tel:${rider.phone}`)}
             />
           ) : null}
+          <LinkButton
+            label={`Message ${rider.name}`}
+            onPress={() => navigation.navigate('Chat', {
+              orderId, orderNumber, peerName: rider.name,
+            })}
+          />
         </Panel>
       ) : null}
 

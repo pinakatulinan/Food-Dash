@@ -105,9 +105,20 @@ export default function ActiveDeliveryScreen({ route, navigation }) {
         {customer ? (
           <Panel>
             <InfoRow label="Customer" value={customer.name} icon="person-outline" />
+            {/* Chat handles most of this now; call stays as the fallback for
+                a rider who can't stop to type. */}
+            <View style={styles.messageBtn}>
+              <Button
+                label="Message customer"
+                icon="chatbubble-outline"
+                variant="ghost"
+                size="large"
+                onPress={() => navigation.navigate('Chat', {
+                  orderId: order.id, orderNumber: order.number, peerName: customer.name,
+                })}
+              />
+            </View>
             {customer.phone ? (
-              // No in-app chat in the MVP by design — this IS how a rider who
-              // can't find the gate reaches someone.
               <Button
                 label={`Call ${customer.phone}`}
                 icon="call"
@@ -170,6 +181,7 @@ const styles = StyleSheet.create({
     lineHeight: 28,
   },
   noPhone: { marginTop: spacing.sm, fontSize: typography.caption, color: colors.textMuted },
+  messageBtn: { marginBottom: spacing.sm },
   notes: { backgroundColor: colors.mintPastel },
   payoutRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   payout: {

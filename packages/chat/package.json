@@ -1,0 +1,10 @@
+{
+  "name": "@food-dash/chat",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "chat.js",
+  "peerDependencies": {
+    "@supabase/supabase-js": "*"
+  }
+}

@@ -10,6 +10,7 @@
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
     "@expo/vector-icons": "^15.0.3",
+    "@food-dash/chat": "*",
     "@food-dash/money": "*",
     "@food-dash/session": "*",
     "@food-dash/theme": "*",

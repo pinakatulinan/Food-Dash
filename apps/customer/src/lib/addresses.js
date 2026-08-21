@@ -10,10 +10,14 @@ function toAddress(row) {
     address: row.address,
     notes: row.notes,
     isDefault: row.is_default,
+    // Null for anything saved before migration 015 — those addresses still
+    // work as text, and the customer is asked to drop a pin next time.
+    lat: row.lat,
+    lng: row.lng,
   };
 }
 
-const FIELDS = 'id, label, address, notes, is_default';
+const FIELDS = 'id, label, address, notes, is_default, lat, lng';
 
 /** Default first, then newest — the order the checkout list shows them in. */
 export async function fetchAddresses() {
@@ -33,7 +37,7 @@ export async function fetchAddresses() {
  * The first one a customer saves becomes their default, because a list of one
  * with nothing selected is a pointless extra tap at checkout.
  */
-export async function createAddress({ label, address, notes, makeDefault }) {
+export async function createAddress({ label, address, notes, makeDefault, lat, lng }) {
   const { count, error: countError } = await supabase
     .from('addresses')
     .select('id', { count: 'exact', head: true });
@@ -48,6 +52,8 @@ export async function createAddress({ label, address, notes, makeDefault }) {
       label: label?.trim() || null,
       address: address.trim(),
       notes: notes?.trim() || null,
+      lat: lat ?? null,
+      lng: lng ?? null,
       is_default: makeDefault || count === 0,
     })
     .select(FIELDS)

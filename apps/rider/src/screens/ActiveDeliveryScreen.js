@@ -7,6 +7,9 @@ import {
 import { colors, browse, spacing, typography } from '@food-dash/theme';
 import { formatMoney } from '@food-dash/money';
 import { advanceDelivery, fetchCustomerContact } from '../lib/rider';
+import {
+  requestLocationPermission, startTracking, stopTracking,
+} from '../lib/location';
 
 // The screen a rider looks at while moving.
 //
@@ -20,6 +23,7 @@ const STAGE = {
     cta: 'Picked up — start delivery',
     icon: 'restaurant-outline',
     destination: (o) => o.pickup,
+    coords: (o) => (o.pickupLat != null ? { lat: o.pickupLat, lng: o.pickupLng } : null),
     destinationLabel: 'Pick up from',
   },
   picked_up: {
@@ -27,6 +31,7 @@ const STAGE = {
     cta: 'Mark as delivered',
     icon: 'bicycle-outline',
     destination: (o) => o.dropoff,
+    coords: (o) => (o.dropoffLat != null ? { lat: o.dropoffLat, lng: o.dropoffLng } : null),
     destinationLabel: 'Deliver to',
   },
 };
@@ -37,8 +42,34 @@ export default function ActiveDeliveryScreen({ route, navigation }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [customer, setCustomer] = useState(null);
+  const [locationOn, setLocationOn] = useState(true);
 
   const stage = STAGE[status];
+
+  // Tracking is tied to carrying an order, not to being online, and not to
+  // this screen being visible — the whole point is that it survives the rider
+  // switching to Google Maps. It stops on handover.
+  useEffect(() => {
+    let active = true;
+    const carrying = status === 'assigned' || status === 'picked_up';
+
+    if (!carrying) { stopTracking(); return undefined; }
+
+    (async () => {
+      const { background } = await requestLocationPermission();
+      if (!active) return;
+      // Declining is allowed. The delivery still works — the customer just
+      // sees an address instead of a moving marker — so this reports the
+      // consequence rather than blocking the screen.
+      if (!background) { setLocationOn(false); return; }
+      setLocationOn(await startTracking());
+    })();
+
+    return () => { active = false; };
+  }, [status]);
+
+  // Stop when the delivery ends, however this screen is left.
+  useEffect(() => stopTracking, []);
 
   // Fetched rather than passed in the order payload, because the database
   // decides who may see this and for how long. A null answer after delivery is
@@ -68,8 +99,20 @@ export default function ActiveDeliveryScreen({ route, navigation }) {
     setBusy(false);
   };
 
+  /**
+   * Navigate to the pin, and only fall back to the typed address without one.
+   *
+   * These two can disagree badly: a customer can pin their actual house and
+   * type the name of a landmark down the road, and the pin is the one that is
+   * literally true. Sending the text to Maps meant the rider drove to whatever
+   * Google made of the words while the customer watched a marker somewhere
+   * else entirely.
+   */
   const openMaps = () => {
-    const dest = encodeURIComponent(`${stage.destination(order)}, Cebu`);
+    const pin = stage?.coords(order);
+    const dest = pin
+      ? `${pin.lat},${pin.lng}`
+      : encodeURIComponent(`${stage.destination(order)}, Cebu`);
     Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${dest}`);
   };
 
@@ -93,6 +136,16 @@ export default function ActiveDeliveryScreen({ route, navigation }) {
         <Panel>
           <Text style={styles.destLabel}>{stage?.destinationLabel ?? 'Delivered to'}</Text>
           <Text style={styles.destValue}>{stage?.destination(order) ?? order.dropoff}</Text>
+          {stage?.coords(order) ? (
+            <Text style={styles.pinNote}>
+              Customer dropped a pin — Maps will take you to the exact spot,
+              which may differ from the address above.
+            </Text>
+          ) : (
+            <Text style={styles.pinNote}>
+              No pin for this one. Maps will search the address as written.
+            </Text>
+          )}
           <Button
             label="Open in Google Maps"
             icon="navigate"
@@ -148,6 +201,16 @@ export default function ActiveDeliveryScreen({ route, navigation }) {
           </View>
         </Panel>
 
+        {!locationOn ? (
+          <Panel style={styles.locationOff}>
+            <InfoRow
+              label="Location sharing is off"
+              value="The customer can't see where you are. Turn on location for Food-Dash in your phone settings."
+              icon="location-outline"
+            />
+          </Panel>
+        ) : null}
+
         <ErrorText>{error}</ErrorText>
       </ScrollView>
 
@@ -180,9 +243,17 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     lineHeight: 28,
   },
+  pinNote: {
+    marginTop: -spacing.sm,
+    marginBottom: spacing.md,
+    fontSize: typography.caption,
+    color: colors.textMuted,
+    lineHeight: 17,
+  },
   noPhone: { marginTop: spacing.sm, fontSize: typography.caption, color: colors.textMuted },
   messageBtn: { marginBottom: spacing.sm },
   notes: { backgroundColor: colors.mintPastel },
+  locationOff: { backgroundColor: '#FDF0EA' },
   payoutRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   payout: {
     marginTop: 2,

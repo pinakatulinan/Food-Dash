@@ -5,10 +5,11 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "ios": { "supportsTablet": false },
-    "android": { "package": "ph.fooddash.customer" },
-    "plugins": [
-      ["expo-splash-screen", { "backgroundColor": "#FFD9C9" }]
-    ]
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "ph.fooddash.customer"
+    }
   }
 }

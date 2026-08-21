@@ -14,6 +14,7 @@ import { fetchMyProfile, updateMyPhone, isUsablePhone } from '../lib/profile';
 import { useCart } from '../lib/cart';
 import { useAsync } from '../lib/useAsync';
 import { Loading, EmptyState } from '../components/states';
+import LocationPicker from '../components/LocationPicker';
 
 const NEW_ADDRESS = 'new';
 
@@ -32,6 +33,8 @@ export default function CartScreen({ navigation }) {
   const [newAddress, setNewAddress] = useState('');
   const [newLabel, setNewLabel] = useState('');
   const [saveForNextTime, setSaveForNextTime] = useState(true);
+  // Where the food actually goes. A typed address is words; this is a place.
+  const [pin, setPin] = useState(null);
 
   const addressState = useAsync(fetchAddresses);
   const addresses = addressState.data;
@@ -70,7 +73,25 @@ export default function CartScreen({ navigation }) {
   }, [addresses, selectedId]);
 
   const chosen = addresses?.find((a) => a.id === selectedId) ?? null;
+  // A saved address carries its own pin. Addresses saved before migration 015
+  // have none, so those fall back to the picker like a new one.
+  const coords = selectedId === NEW_ADDRESS
+    ? pin
+    : (chosen?.lat != null ? { lat: chosen.lat, lng: chosen.lng } : pin);
   const addressText = selectedId === NEW_ADDRESS ? newAddress : (chosen?.address ?? '');
+
+  /**
+   * What gets stored as the written address.
+   *
+   * place_order() requires a non-empty one, and it should: a rider standing on
+   * the right street still needs to know which gate. But when a pin has been
+   * dropped, insisting the customer also type something is friction for no
+   * gain — the exact spot is already known. So an unwritten address becomes a
+   * readable stand-in, and the pin does the navigating.
+   */
+  const deliveryAddress = addressText.trim()
+    || (coords ? `Pinned location (${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)})` : '');
+  const canDeliver = deliveryAddress.length > 0;
   const deliveryFeeCents = restaurant?.deliveryFeeCents ?? 0;
   const totalCents = subtotalCents + deliveryFeeCents;
 
@@ -91,14 +112,16 @@ export default function CartScreen({ navigation }) {
         // same try/catch outcome as placeOrder.
         createAddress({
           label: newLabel,
-          address: newAddress,
+          address: deliveryAddress,
           notes: null,
           makeDefault: false,
+          lat: pin?.lat,
+          lng: pin?.lng,
         }).catch(() => {});
       }
 
       const order = await placeOrder({
-        restaurant, cart: items, address: addressText, notes,
+        restaurant, cart: items, address: deliveryAddress, notes, coords,
       });
 
       clear();
@@ -223,15 +246,25 @@ export default function CartScreen({ navigation }) {
           onPress={() => setSelectedId(NEW_ADDRESS)}
         />
 
-        {selectedId === NEW_ADDRESS ? (
+        {selectedId === NEW_ADDRESS || (chosen && chosen.lat == null) ? (
           <View style={styles.newAddress}>
+            {/* Without this the rider only gets text, and the customer's own
+                tracking map can only measure against the restaurant. */}
+            <Text style={styles.pinLabel}>Pin your exact location</Text>
+            <LocationPicker value={coords} onChange={setPin} />
             <Input
-              label="Address"
+              label={pin ? 'Address or landmark (optional)' : 'Address'}
               value={newAddress}
               onChangeText={setNewAddress}
-              placeholder="House no., street, barangay"
+              placeholder={pin ? 'Blue gate, second floor…' : 'House no., street, barangay'}
               autoCapitalize="words"
             />
+            {pin ? (
+              <Text style={styles.pinnedNote}>
+                You've pinned the spot, so this is optional — but a landmark
+                helps your rider find the right door.
+              </Text>
+            ) : null}
             <Input
               label="Name it (optional)"
               value={newLabel}
@@ -266,7 +299,7 @@ export default function CartScreen({ navigation }) {
           label={placing ? 'Placing order…' : 'Place order'}
           onPress={submit}
           disabled={
-            placing || !addressText.trim() || isEmpty ||
+            placing || !canDeliver || isEmpty ||
             (needsPhone && !isUsablePhone(phone))
           }
         />
@@ -341,6 +374,18 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   newAddress: { marginTop: spacing.md },
+  pinnedNote: {
+    marginTop: -spacing.sm,
+    marginBottom: spacing.md,
+    fontSize: typography.caption,
+    color: colors.textMuted,
+    lineHeight: 17,
+  },
+  pinLabel: {
+    marginBottom: spacing.xs,
+    fontSize: typography.pill,
+    color: colors.textMuted,
+  },
   notes: { marginTop: spacing.md },
   checkRow: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,

@@ -32,16 +32,23 @@ function toOrder(row) {
     status: row.status,
     deliveryStatus: row.delivery_status,
     dropoff: row.dropoff_address,
+    dropoffLat: row.dropoff_lat,
+    dropoffLng: row.dropoff_lng,
     notes: row.notes,
     payoutCents: row.rider_payout_cents,
     restaurant: row.restaurants?.name ?? 'Restaurant',
     pickup: row.restaurants?.address ?? '',
+    pickupLat: row.restaurants?.lat ?? null,
+    pickupLng: row.restaurants?.lng ?? null,
   };
 }
 
 const ORDER_FIELDS =
   'id, order_number, status, delivery_status, dropoff_address, notes, ' +
-  'rider_payout_cents, restaurants(name, address)';
+  // The pin the customer dropped at checkout. Null on older orders and on
+  // anything ordered from the web, where there is no map to drop one on.
+  'dropoff_lat, dropoff_lng, ' +
+  'rider_payout_cents, restaurants(name, address, lat, lng)';
 
 /** The unclaimed pool. Returns nothing unless you're approved and online. */
 export async function fetchAvailableOrders() {

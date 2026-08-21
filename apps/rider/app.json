@@ -9,7 +9,15 @@
       "package": "ph.fooddash.rider"
     },
     "plugins": [
-      ["expo-splash-screen", { "backgroundColor": "#FFD9C9" }]
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Food-Dash shares your location with the customer while you are delivering their order.",
+          "locationWhenInUsePermission": "Food-Dash shows the customer where their order is while you deliver it.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ]
     ],
     "extra": {
       "eas": {

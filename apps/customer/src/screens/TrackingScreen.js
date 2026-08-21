@@ -8,9 +8,10 @@ import { colors, browse, spacing, typography } from '@food-dash/theme';
 import { formatMoney } from '@food-dash/money';
 import {
   fetchOrder, subscribeToOrder, ORDER_STEPS as STEPS, stepFor, statusLabel,
-  fetchRiderContact, cancelOrder, isCancellable,
+  fetchRiderContact, cancelOrder, isCancellable, locationFreshness,
 } from '../lib/orders';
 import { Loading, EmptyState } from '../components/states';
+import RiderMap from '../components/RiderMap';
 
 function subtitleFor(order) {
   if (order.deliveryStatus === 'assigned') return 'A rider is on the way to the restaurant';
@@ -110,6 +111,11 @@ export default function TrackingScreen({ route, navigation }) {
   // Only worth saying anything when the two actually disagree.
   const totalMoved =
     quotedTotalCents != null && quotedTotalCents !== order.totalCents;
+  // Only while a rider is actually carrying it. The database stops writing
+  // positions on handover, so this goes quiet on its own.
+  const tracking = order.deliveryStatus === 'assigned' || order.deliveryStatus === 'picked_up'
+    ? locationFreshness(order)
+    : null;
 
   return header(
     <View style={styles.body}>
@@ -123,6 +129,12 @@ export default function TrackingScreen({ route, navigation }) {
           </Text>
         ) : null}
       </Panel>
+
+      {tracking ? (
+        <Panel>
+          <RiderMap order={order} freshness={tracking} />
+        </Panel>
+      ) : null}
 
       {rider ? (
         <Panel>

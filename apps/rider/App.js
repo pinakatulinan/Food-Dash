@@ -7,6 +7,7 @@ import { colors, spacing, typography } from '@food-dash/theme';
 import { supabase } from './src/lib/supabase';
 import { useSession } from './src/lib/useSession';
 import { fetchRiderRecord, fetchActiveDelivery } from './src/lib/rider';
+import { stopTracking } from './src/lib/location';
 import AuthScreen from './src/screens/AuthScreen';
 import PendingApprovalScreen from './src/screens/PendingApprovalScreen';
 import IncomingOrdersScreen from './src/screens/IncomingOrdersScreen';
@@ -15,7 +16,13 @@ import EarningsScreen from './src/screens/EarningsScreen';
 import ChatScreen from './src/screens/ChatScreen';
 
 const Stack = createNativeStackNavigator();
-const signOut = () => supabase.auth.signOut();
+const signOut = async () => {
+  // Stop reporting before the session goes: the background task would keep
+  // firing with no valid session, and nobody should be followed after signing
+  // out of a delivery app.
+  await stopTracking();
+  await supabase.auth.signOut();
+};
 
 export default function App() {
   const { session, loading } = useSession();
